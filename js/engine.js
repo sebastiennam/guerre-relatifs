@@ -409,16 +409,16 @@
     let mode = lvl === 1 ? 'plus' : lvl === 2 ? 'moins' : pick(['plus', 'moins', 'ordre']);
     if (mode === 'plus') {
       const miss = s2 === '-' ? -b : b;
-      return { kind: 'deguise', expr: flat, display: left + ' = ' + firstS + ' + ( … )', answer: miss, label: 'Quel soldat est caché ? (avec sa couleur)', expl: 'Ordre « + » : le soldat est fidèle, il porte déjà la bonne veste : ' + GR.fmt(miss, true) + '.' };
+      return { kind: 'deguise', expr: flat, full: '(' + sn(s1, a) + ')+(' + sn(miss < 0 ? '-' : '+', b) + ')', display: left + ' = ' + firstS + ' + ( … )', answer: miss, label: 'Quel soldat est caché ? (avec sa couleur)', expl: 'Ordre « + » : le soldat est fidèle, il porte déjà la bonne veste : ' + GR.fmt(miss, true) + '.' };
     }
     if (mode === 'moins') {
       const miss = s2 === '-' ? b : -b;
-      return { kind: 'deguise', expr: flat, display: left + ' = ' + firstS + ' ' + MINUS + ' ( … )', answer: miss, label: 'Quel soldat est caché ? (avec sa couleur)', expl: 'Ordre « − » : le soldat est un traître, il porte la veste de l\'autre couleur : ' + GR.fmt(miss, true) + ' (en retournant sa veste, il redevient ' + GR.fmt(s2 === '-' ? -b : b, true) + ').' };
+      return { kind: 'deguise', expr: flat, full: '(' + sn(s1, a) + ')-(' + sn(miss < 0 ? '-' : '+', b) + ')', display: left + ' = ' + firstS + ' ' + MINUS + ' ( … )', answer: miss, label: 'Quel soldat est caché ? (avec sa couleur)', expl: 'Ordre « − » : le soldat est un traître, il porte la veste de l\'autre couleur : ' + GR.fmt(miss, true) + ' (en retournant sa veste, il redevient ' + GR.fmt(s2 === '-' ? -b : b, true) + ').' };
     }
     const shown = rs();
     const inner = shown === s2 ? '+' : '-';
     const ordreRep = shown === s2 ? '+' : '-';
-    return { kind: 'deguise-ordre', expr: flat, display: left + ' = ' + firstS + ' … (' + GR.sgn(shown) + A(b) + ')', answer: ordreRep, label: 'Quel ordre faut-il donner ?', expl: (ordreRep === '+' ? 'Le soldat porte déjà la bonne veste : il doit rester fidèle → ordre « + ».' : 'Le soldat porte la mauvaise veste : il doit la retourner → ordre « − ».'), inner };
+    return { kind: 'deguise-ordre', expr: flat, full: '(' + sn(s1, a) + ')' + ordreRep + '(' + sn(shown, b) + ')', display: left + ' = ' + firstS + ' … (' + GR.sgn(shown) + A(b) + ')', answer: ordreRep, label: 'Quel ordre faut-il donner ?', expl: (ordreRep === '+' ? 'Le soldat porte déjà la bonne veste : il doit rester fidèle → ordre « + ».' : 'Le soldat porte la mauvaise veste : il doit la retourner → ordre « − ».'), inner };
   };
   // 6. Grandes manœuvres : longues expressions avec parenthèses
   gen.manoeuvres = function (lvl) {

@@ -5,59 +5,63 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>La Guerre des relatifs</title>
 <meta name="description" content="Réviser les sommes de nombres relatifs : soldats, ordres et batailles.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='8' width='11' height='20' rx='5' fill='%231e9a4a'/%3E%3Crect x='18' y='8' width='11' height='20' rx='5' fill='%23d63a3a'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='8' width='11' height='20' rx='5' fill='%2322c55e'/%3E%3Crect x='18' y='8' width='11' height='20' rx='5' fill='%23f04444'/%3E%3C/svg%3E">
 </head>
 <body>
 <header class="top">
   <div class="top-in">
-    <button class="logo" data-go="home" aria-label="Accueil"><span class="logo-mini"><i></i><i></i></span>La Guerre des relatifs</button>
+    <button class="logo" data-go="home" aria-label="Retour à la campagne"><span class="logo-mini"><i></i><i></i></span><span class="logo-txt">La Guerre<b>des relatifs</b></span></button>
     <nav class="nav">
-      <button data-go="home">Missions</button>
-      <button data-go="help">Aide-moi</button>
-      <button data-go="memo">Mémo</button>
+      <button data-go="home" aria-label="Campagne">🗺️<span> Campagne</span></button>
+      <button data-go="help" aria-label="Aide-moi">🆘<span> Aide-moi</span></button>
+      <button data-go="memo" aria-label="Mémo">📜<span> Mémo</span></button>
     </nav>
+    <button class="icon-btn" id="snd" aria-label="Activer ou couper le son">🔇</button>
   </div>
 </header>
 
 <main>
-  <!-- ACCUEIL -->
+  <!-- CAMPAGNE -->
   <section id="home">
-    <h1>Choisis ta mission</h1>
-    <p class="lead">Chaque nombre est un soldat. Son signe, c'est la couleur de sa veste. Les missions sont rangées de la plus simple à la plus difficile.</p>
-    <div class="memo-strip">
-      <div class="card"><h4>1. Les soldats</h4><p>Un nombre = un soldat. <b style="color:var(--g-dark)">+ veste verte</b>, <b style="color:var(--r-dark)">− veste rouge</b>.</p></div>
-      <div class="card"><h4>2. Les ordres</h4><p>Signe devant une parenthèse = un ordre. <b>+</b> fidèles, <b>−</b> traîtres : ils retournent leur veste.</p></div>
-      <div class="card"><h4>3. La bataille</h4><p>Même couleur : ils s'allient. Couleurs opposées : ils s'affrontent, le plus fort gagne.</p></div>
+    <div class="hero">
+      <div>
+        <h1>Ta campagne</h1>
+        <p class="lead">Réussis le <b>niveau 2</b> d'une mission (7/10) pour débloquer la suivante. Le niveau 3 est un défi bonus pour gagner des étoiles.</p>
+      </div>
+      <div class="rank" id="rank"></div>
     </div>
-    <div class="grid" id="missions"></div>
-    <p class="foot">Pour le professeur : <a href="fiche.html">fiche d'exercices imprimable</a> · <a href="guide-prof.html">guide</a></p>
+    <div class="road" id="road"></div>
+    <p class="foot">Professeur : <a href="fiche.html">fiche imprimable</a> · <a href="guide-prof.html">guide enseignant</a></p>
   </section>
 
   <!-- EXERCICE -->
   <section id="ex" class="hidden">
-    <div class="ex-top">
-      <button class="btn" data-go="home">← Missions</button>
-      <h2 id="ex-title"></h2>
-      <span class="pill" id="ex-level"></span>
-      <div class="progress"><i id="ex-prog"></i></div>
-      <span class="pill" id="ex-count"></span>
+    <div class="hud">
+      <button class="icon-btn" id="ex-back" aria-label="Quitter la série">✕</button>
+      <div class="hud-t"><div id="ex-title"></div><div class="hud-sub" id="ex-level"></div></div>
+      <div class="pips" id="pips" aria-label="Progression de la série"></div>
+      <div class="streak" id="streak" aria-live="polite"></div>
+      <button class="icon-btn" id="ex-tuto" aria-label="Revoir le tutoriel">?</button>
     </div>
-    <div class="ex-layout">
-      <div class="card">
+    <div class="ex-grid">
+      <div class="qcard" id="qcard">
         <div class="q-label" id="q-label"></div>
         <div class="q-expr" id="q-expr"></div>
-        <div class="q-visu" id="q-visu"></div>
+        <div class="q-stage" id="q-stage"></div>
         <div id="q-zone"></div>
-        <div id="q-fb"></div>
+        <div id="q-fb" aria-live="polite"></div>
         <div class="actions" id="q-actions"></div>
-        <div id="q-hints" class="hints" style="margin-top:12px"></div>
+        <div id="q-hints" class="hints"></div>
       </div>
-      <div class="card">
+      <div class="side">
         <div class="pad" id="pad"></div>
-        <div class="actions">
-          <button class="btn warn" id="btn-hint">Indice</button>
-          <button class="btn" id="btn-sold">Voir les soldats</button>
+        <div class="side-btns">
+          <button class="btn ghost sm" id="btn-hint">💡 Indice</button>
+          <button class="btn ghost sm" id="btn-sold">👁 Soldats</button>
         </div>
       </div>
     </div>
@@ -65,59 +69,61 @@
 
   <!-- FIN DE SÉRIE -->
   <section id="end" class="hidden">
-    <div class="card end">
-      <h2 id="end-title">Mission terminée</h2>
-      <div class="stars" id="end-stars"></div>
-      <div class="score" id="end-score"></div>
-      <p id="end-msg" class="lead"></p>
+    <div class="endcard">
+      <div class="end-stars" id="end-stars"></div>
+      <h2 id="end-title"></h2>
+      <div class="end-score" id="end-score"></div>
+      <div class="end-xp" id="end-xp"></div>
+      <div id="end-unlock"></div>
+      <p class="lead" id="end-msg"></p>
       <div class="actions">
-        <button class="btn" data-go="home">Retour aux missions</button>
-        <button class="btn" id="end-again">Recommencer</button>
-        <button class="btn main" id="end-next">Niveau suivant ▶</button>
+        <button class="btn ghost" data-go="home">🗺️ Campagne</button>
+        <button class="btn" id="end-again">↺ Recommencer</button>
+        <button class="btn go" id="end-next">Suivant ▶</button>
       </div>
     </div>
   </section>
 
   <!-- AIDE-MOI -->
   <section id="help" class="hidden">
-    <h1>Aide-moi</h1>
-    <p class="lead">Écris le calcul de ton exercice. Je te rappelle la méthode, étape par étape, sans te donner la réponse.</p>
-    <div class="ex-layout">
+    <h1>🆘 Aide-moi</h1>
+    <p class="lead">Écris le calcul de ton exercice. Tu pourras faire avancer la bataille toi-même, mais je ne te donnerai pas la réponse : à toi de conclure !</p>
+    <div class="two" style="margin-top:16px">
       <div class="card">
         <label for="help-in" class="q-label">Mon calcul :</label>
         <div class="answer-row" style="justify-content:flex-start">
           <input id="help-in" class="ans wide" autocomplete="off" inputmode="none" placeholder="ex : −6 − (−7)">
-          <button class="btn main" id="help-go">Analyser</button>
+          <button class="btn violet" id="help-go">Analyser</button>
         </div>
         <div class="err" id="help-err"></div>
         <div id="help-out"></div>
       </div>
-      <div class="card">
+      <div class="side">
         <div class="pad" id="pad-help"></div>
-        <p class="q-label" style="margin-top:12px">Astuce : pour un nombre négatif dans une parenthèse, tape <b>( − 7 )</b>. Pour un produit, tape <b>×</b> avec la touche « x » du clavier.</p>
+        <p class="q-label" style="margin-top:12px">Pour un nombre négatif dans une parenthèse, tape <b>( − 7 )</b>. Pour un produit, utilise la touche <b>×</b>.</p>
       </div>
     </div>
   </section>
 
   <!-- MÉMO -->
   <section id="memo" class="hidden">
-    <h1>Le mémo du soldat</h1>
-    <p class="lead">Tout tient en trois règles. Touche un exemple pour voir la bataille.</p>
-    <div class="rules">
+    <h1>📜 Le mémo du soldat</h1>
+    <p class="lead">Tout tient en trois règles. Touche un exemple pour jouer la bataille.</p>
+    <div class="rules" style="margin-top:16px">
       <div class="card rule">
         <div class="n">1</div>
         <div>
           <h3>Chaque nombre est un soldat</h3>
-          <p>Son signe est la couleur de sa veste : <b style="color:var(--g-dark)">positif = veste verte</b>, <b style="color:var(--r-dark)">négatif = veste rouge</b>.</p>
-          <div class="troupes" id="memo-sold" style="justify-content:flex-start"></div>
+          <p>Son signe est la couleur de sa veste : <b class="tg">positif = veste verte</b>, <b class="tr">négatif = veste rouge</b>. Le nombre sans son signe, c'est sa <b>force</b>.</p>
+          <div id="memo-sold"></div>
         </div>
       </div>
       <div class="card rule">
         <div class="n">2</div>
         <div>
           <h3>Un signe devant une parenthèse est un ordre</h3>
-          <p>La parenthèse <b>sélectionne</b> des soldats. L'ordre <b>+</b> : ils sont fidèles, ils gardent leur veste. L'ordre <b>−</b> : ce sont des <b>traîtres</b>, ils <b>retournent leur veste</b>. Une fois l'ordre exécuté, la sélection disparaît.</p>
-          <p>Un signe devant un nombre n'est pas un ordre : c'est la couleur de sa veste. <b>Pas de parenthèse, pas d'ordre.</b></p>
+          <p>La parenthèse <b>sélectionne</b> des soldats. Ordre <b>+</b> : fidèles, ils gardent leur veste. Ordre <b>−</b> : traîtres, ils <b>retournent leur veste</b>. Une fois l'ordre exécuté, la sélection disparaît.</p>
+          <p><b>Pas de parenthèse, pas d'ordre</b> : un signe devant un nombre est simplement la couleur de sa veste.</p>
           <div class="ex-chips" data-ex="-(-7)|+(-7)|-(+7)|-6-(-7)|5-(3-8)"></div>
         </div>
       </div>
@@ -125,7 +131,7 @@
         <div class="n">3</div>
         <div>
           <h3>La bataille</h3>
-          <p>La <b>force</b> d'un soldat, c'est son nombre sans le signe. <b>Même couleur</b> : ils s'allient, leurs forces s'additionnent. <b>Couleurs opposées</b> : ils s'affrontent, le plus fort gagne et il lui reste la différence des forces.</p>
+          <p><b>Même couleur</b> : ils s'allient, leurs forces s'additionnent. <b>Couleurs opposées</b> : ils s'affrontent, le plus fort gagne et il lui reste la différence des forces.</p>
           <div class="ex-chips" data-ex="-6+7|8-15|-3-8|(+8)+(-15)|-3-8+5-2"></div>
         </div>
       </div>
@@ -134,23 +140,47 @@
         <div>
           <h3>Attention au piège</h3>
           <p>« Moins par moins donne plus », c'est la règle des <b>produits</b> (×), pas des sommes !</p>
-          <p style="font-family:var(--math);font-size:19px">−3 − 8 : deux soldats rouges qui s'allient → <b>−11</b><br>(−3) × (−8) : un produit → règle des signes → <b>+24</b></p>
-          <div class="ex-chips" data-ex="-3-8|(-3)*(-8)"></div>
+          <p style="font-family:var(--math);font-size:20px">−3 − 8 : deux rouges qui s'allient → <b>−11</b><br>(−3) × (−8) : un produit → la veste se retourne deux fois → <b>+24</b></p>
+          <div class="ex-chips" data-ex="-3-8|(-3)*(-8)|-3*8"></div>
         </div>
       </div>
     </div>
   </section>
 </main>
 
+<!-- fenêtre bataille -->
 <div class="modal hidden" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-  <div class="card">
-    <div class="modal-head"><h3 id="modal-title">Rejouer la bataille</h3><button class="x" id="modal-x" aria-label="Fermer">×</button></div>
+  <div class="mbox">
+    <div class="mhead"><div><div class="kicker">À toi de jouer</div><h2 id="modal-title">La bataille</h2></div><button class="icon-btn" id="modal-x" aria-label="Fermer">✕</button></div>
     <div id="modal-body"></div>
   </div>
 </div>
 
+<!-- fiche mission -->
+<div class="modal hidden" id="sheet" role="dialog" aria-modal="true">
+  <div class="mbox" id="sheet-box"></div>
+</div>
+
+<!-- tutoriel -->
+<div class="modal hidden" id="tuto" role="dialog" aria-modal="true" aria-labelledby="tuto-t">
+  <div class="mbox">
+    <div class="mhead"><div class="kicker" id="tuto-kicker"></div><button class="icon-btn" id="tuto-x" aria-label="Fermer le tutoriel">✕</button></div>
+    <div class="tuto-dots" id="tuto-dots"></div>
+    <h2 id="tuto-t"></h2>
+    <div class="tuto-d" id="tuto-d"></div>
+    <div id="tuto-demo"></div>
+    <div class="tuto-nav">
+      <button class="btn ghost" id="tuto-prev">◀ Précédent</button>
+      <button class="btn go" id="tuto-next">Suivant ▶</button>
+    </div>
+  </div>
+</div>
+
+<div id="confetti" aria-hidden="true"></div>
+
 <script src="js/engine.js"></script>
 <script src="js/battle.js"></script>
+<script src="js/tutos.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
