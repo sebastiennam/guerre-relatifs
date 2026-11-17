@@ -334,6 +334,11 @@ main { max-width: 1180px; margin: 0 auto; padding: 22px 16px 70px; }
 .tuto-dots i.past { background: rgba(251, 191, 36, .5); } .tuto-dots i.on { background: var(--gold); }
 .tuto-d { font-size: 18px; margin: 6px 0 14px; color: #dfe4fb; }
 .tuto-nav { display: flex; justify-content: space-between; gap: 10px; margin-top: 16px; }
+.tuto-wait { text-align: right; color: var(--gold); font-size: 14px; font-weight: 700; min-height: 22px; margin-top: 8px; }
+.btn.locked { position: relative; overflow: hidden; }
+.btn.locked:disabled { opacity: .7; filter: grayscale(.7); }
+.btn.locked::after { content: ""; position: absolute; left: 0; bottom: 0; height: 5px; width: 100%; background: rgba(255, 255, 255, .75); transform-origin: left; animation: lockfill var(--lock, 2s) linear forwards; }
+@keyframes lockfill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 .tsteps { margin: 10px 0 0; padding: 0; list-style: none; counter-reset: s; display: grid; gap: 10px; }
 .tsteps li { counter-increment: s; display: flex; gap: 12px; align-items: center; background: rgba(255, 255, 255, .05); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; font-size: 18px; }
 .tsteps li::before { content: counter(s); width: 38px; height: 38px; border-radius: 50%; background: var(--gold); color: #3b2500; font: 800 20px var(--head); display: grid; place-items: center; flex-shrink: 0; }

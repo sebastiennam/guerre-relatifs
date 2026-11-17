@@ -159,9 +159,15 @@
     build(typeof expr === 'string' ? GR.parse(expr) : expr, line, size || 'sm');
   };
 
+  // Temps de lecture d'un texte (élève de collège : environ 3 mots par seconde)
+  GR.readTime = function (html, min, max) {
+    const words = String(html || '').replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
+    return Math.min(max || 7000, Math.max(min || 1800, words * 330));
+  };
+
   /* ================= LECTEUR ================= */
   GR.Player = function (container, expr, opts) {
-    opts = Object.assign({ mode: 'interactive', showResult: true, until: null, speed: 1, size: '', hideFlat: false, onEnd: null }, opts || {});
+    opts = Object.assign({ mode: 'interactive', showResult: true, until: null, speed: 0.7, size: '', hideFlat: false, onEnd: null }, opts || {});
     const node = typeof expr === 'string' ? GR.parse(expr) : expr;
     const ia = opts.mode === 'interactive' || opts.mode === 'guided';
     container.innerHTML = '';
@@ -182,10 +188,21 @@
     let dead = false;
     const timers = [];
     const wait = (ms) => new Promise((res, rej) => { const t = setTimeout(() => (dead ? rej(CANCEL) : res()), ms / opts.speed); timers.push(t); });
+    // Chaque légende reste affichée le temps de la lire avant d'être remplacée
+    let lastRead = { at: 0, ms: 0 };
     const say = (ico, html) => {
       cap.innerHTML = '<span class="pl-ico">' + ico + '</span><span>' + html + '</span>';
       cap.classList.remove('pop'); void cap.offsetWidth; cap.classList.add('pop');
+      lastRead = { at: performance.now(), ms: GR.readTime(html) };
     };
+    let pauseEnd = null; // « Montre-moi » pendant une pause de lecture : on abrège la pause
+    const readPause = () => new Promise((res, rej) => {
+      const left = lastRead.at + lastRead.ms - performance.now();
+      const done = () => { clearTimeout(t); pauseEnd = null; if (dead) rej(CANCEL); else res(); };
+      const t = setTimeout(done, Math.max(0, left));
+      timers.push(t);
+      pauseEnd = done;
+    });
     const display = GR.str(node);
     const api = { node, stages: [], done: 0, busy: false, el: root };
     let reg = null, flat = null, b = null, mx = 1, skipFn = null;
@@ -233,10 +250,13 @@
         let left = targets.length;
         if (!left) { res(); return; }
         let chain = Promise.resolve();
+        const fired = new Set(); // propre à cette étape (un même soldat peut être touché à plusieurs étapes)
         targets.forEach((t) => {
           t.classList.add('tap');
+          t._done = false;
           const fire = () => {
-            if (t._done) return;
+            if (fired.has(t)) return;
+            fired.add(t);
             t._done = true;
             t.classList.remove('tap');
             t.removeEventListener('click', fire);
@@ -245,7 +265,7 @@
           t._fire = fire;
           t.addEventListener('click', fire);
         });
-        skipFn = async () => { for (const t of targets) { if (!t._done) { t._fire(); await wait(300); } } };
+        skipFn = async () => { for (const t of targets) { if (!fired.has(t)) { t._fire(); await wait(300); } } };
       });
     }
     async function each(targets, act, gap) { for (const t of targets) { await act(t); await wait(gap || 250); } }
@@ -486,11 +506,13 @@
       while (!dead && api.done < api.stages.length) {
         const ok = await api.next();
         if (!ok) return;
-        if (api.done < api.stages.length) { try { await wait(ia ? 150 : 450); } catch (e) { return; } }
+        if (api.done < api.stages.length) { try { await readPause(); await wait(ia ? 250 : 500); } catch (e) { return; } }
       }
       if (!dead && opts.onEnd) opts.onEnd();
     };
-    api.skip = () => { if (skipFn) skipFn(); };
+    api.skip = () => { if (skipFn) skipFn(); else if (pauseEnd) pauseEnd(); };
+    api.readPause = () => readPause().catch(() => {});
+    api.isDone = () => api.done >= api.stages.length && !api.busy;
     api.destroy = () => { dead = true; timers.forEach(clearTimeout); };
     api.restart = () => { api.destroy(); const p = GR.Player(container, expr, opts); return p; };
 
@@ -498,7 +520,7 @@
     const show = h('button', 'btn ghost sm', '👉 Montre-moi');
     again.type = show.type = 'button';
     again.onclick = () => { if (opts.onRestart) opts.onRestart(api.restart()); else api.restart(); };
-    show.onclick = () => { if (skipFn) skipFn(); else if (!api.busy) api.next(); };
+    show.onclick = () => { if (skipFn) skipFn(); else if (pauseEnd) pauseEnd(); };
     function update() {
       const fin = api.done >= api.stages.length;
       show.disabled = fin;

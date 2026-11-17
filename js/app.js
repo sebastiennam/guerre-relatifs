@@ -184,15 +184,34 @@
       $('sheet-lvls').appendChild(b);
     });
   }
+  // Le tutoriel est obligatoire : aucun niveau ne démarre tant qu'il n'a pas été suivi jusqu'au bout
   function startLevel(mid, l) {
-    if (l === 1 && !tutoSeen(mid)) openTuto(mid, () => startSeries(mid, 1));
+    if (!tutoSeen(mid)) openTuto(mid, () => startSeries(mid, l), true);
     else startSeries(mid, l);
+  }
+
+  // Verrou de lecture : le bouton reste inactif (barre qui se remplit) pendant ms, puis tant que cond() est faux
+  function lockBtn(btn, ms, cond, onWait) {
+    btn.disabled = true;
+    btn.classList.add('locked');
+    btn.style.setProperty('--lock', ms + 'ms');
+    const t0 = performance.now();
+    clearTimeout(btn._lockT);
+    const tick = () => {
+      if (!btn.isConnected) return;
+      const timeOk = performance.now() - t0 >= ms;
+      const condOk = !cond || cond();
+      if (timeOk && condOk) { btn.disabled = false; btn.classList.remove('locked'); if (onWait) onWait(null); return; }
+      if (onWait) onWait(timeOk ? 'cond' : 'time');
+      btn._lockT = setTimeout(tick, 200);
+    };
+    tick();
   }
 
   /* ================= TUTORIEL ================= */
   let T = null;
-  function openTuto(mid, onDone) {
-    T = { mid, slides: GR.TUTOS[mid], i: 0, onDone };
+  function openTuto(mid, onDone, mandatory) {
+    T = { mid, slides: GR.TUTOS[mid], i: 0, onDone, mandatory: !!mandatory, player: null };
     $('tuto').classList.remove('hidden');
     renderTuto();
   }
@@ -209,12 +228,21 @@
     demo.innerHTML = '';
     let expr = s.expr;
     if (expr === undefined) for (let k = i; k >= 0; k--) if (slides[k].expr !== undefined) { expr = slides[k].expr; break; }
-    if (expr) modalPlayers.push(GR.Player(demo, expr, { mode: 'interactive', until: s.until || null, showResult: true, onRestart: (p) => modalPlayers.push(p) }));
-    else demo.innerHTML = s.html || '';
+    T.player = null;
+    if (expr) {
+      T.player = GR.Player(demo, expr, { mode: 'interactive', until: s.until || null, showResult: true, onRestart: (p) => { modalPlayers.push(p); if (T) T.player = p; } });
+      modalPlayers.push(T.player);
+    } else demo.innerHTML = s.html || '';
+    const slideT = T;
+    const readMs = GR.readTime(s.t + ' ' + s.d + ' ' + (s.html || ''), 3500, 12000);
+    lockBtn($('tuto-next'), readMs, () => !slideT.player || slideT.player.isDone(), (why) => {
+      $('tuto-wait').textContent = why === 'time' ? '📖 Prends le temps de lire…' : why === 'cond' ? '🎬 Termine l’animation : touche les éléments qui brillent (ou « Montre-moi »).' : '';
+    });
     $('tuto-prev').disabled = i === 0;
     $('tuto-next').textContent = i === slides.length - 1 ? (T.onDone ? '⚔️ C\'est parti !' : '✓ J\'ai compris') : 'Suivant ▶';
   }
   $('tuto-next').onclick = () => {
+    if (!T || $('tuto-next').disabled) return;
     if (T.i < T.slides.length - 1) { T.i++; renderTuto(); return; }
     markTuto(T.mid);
     const cb = T.onDone;
@@ -222,7 +250,11 @@
     if (cb) cb();
   };
   $('tuto-prev').onclick = () => { if (T.i > 0) { T.i--; renderTuto(); } };
-  $('tuto-x').onclick = () => { if (T) { markTuto(T.mid); } closeAllModals(); T = null; };
+  function quitTuto() {
+    if (T && T.mandatory) toast('📖 Le tutoriel est obligatoire : termine-le pour commencer la mission.');
+    closeAllModals(); T = null;
+  }
+  $('tuto-x').onclick = quitTuto;
 
   /* ================= BATAILLE EN FENÊTRE ================= */
   function openBattle(expr, title) {
@@ -232,8 +264,8 @@
     modalPlayers.push(GR.Player($('modal-body'), expr, { mode: 'interactive', showResult: true, onRestart: (p) => modalPlayers.push(p) }));
   }
   $('modal-x').onclick = closeAllModals;
-  ['modal', 'sheet', 'tuto'].forEach((id) => $(id).addEventListener('click', (e) => { if (e.target.id === id) { if (id === 'tuto' && T) { markTuto(T.mid); T = null; } closeAllModals(); } }));
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { if (T) { markTuto(T.mid); T = null; } closeAllModals(); } });
+  ['modal', 'sheet', 'tuto'].forEach((id) => $(id).addEventListener('click', (e) => { if (e.target.id === id) { if (id === 'tuto') { quitTuto(); return; } closeAllModals(); } }));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { if (T) { quitTuto(); return; } closeAllModals(); } });
 
   /* ================= PAVÉ ================= */
   function buildPad(el, keys, getTarget, onOk) {
@@ -339,6 +371,8 @@
       skip.onclick = () => p.skip();
       row.appendChild(skip);
       $('q-zone').appendChild(row);
+      await p.readPause();
+      if (S.player !== p || S.done) return;
       const ok = await p.next();
       if (ok && S.player === p && !S.done) guidedStep();
       return;
@@ -408,7 +442,7 @@
   }
 
   function validate() {
-    if (S.done) { nextQuestion(); return; }
+    if (S.done) { if (S.nextBtn && !S.nextBtn.disabled) nextQuestion(); return; }
     const q = S.q, inp = S.input;
     if (!inp || inp.disabled) return;
     if (!inp.value.trim()) { fb('info', 'Écris d\'abord ta réponse.'); return; }
@@ -520,8 +554,10 @@
       act.appendChild(b);
     }
     const n = h('button', 'btn go', S.i >= SERIE ? 'Voir mon score 🏁' : 'Question suivante ▶');
-    n.onclick = nextQuestion;
+    n.onclick = () => { if (!n.disabled) nextQuestion(); };
     act.appendChild(n);
+    S.nextBtn = n;
+    lockBtn(n, GR.readTime($('q-fb').innerText, ok ? 1800 : 3500, 8000));
   }
 
   function endSeries() {
