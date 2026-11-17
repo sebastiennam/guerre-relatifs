@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guide enseignant — Guerre des relatifs</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  main { max-width: 860px; }
+  table { width: 100%; border-collapse: collapse; background: #fff; font-size: 15px; }
+  th, td { border: 1px solid var(--line); padding: 7px 9px; text-align: left; vertical-align: top; }
+  th { background: #f2f2f4; }
+  td .m { font-family: var(--math); white-space: nowrap; }
+  .card { margin-bottom: 14px; }
+  li { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<header class="top"><div class="top-in"><a class="logo" href="index.html" style="text-decoration:none"><span class="logo-mini"><i></i><i></i></span>La Guerre des relatifs</a><nav class="nav"><a href="index.html"><button>Appli élève</button></a><a href="fiche.html"><button>Fiche imprimable</button></a></nav></div></header>
+<main>
+  <h1>Guide enseignant</h1>
+  <p class="lead">Révision des sommes de relatifs (5e–4e) avec un modèle unique : des soldats, des ordres, une bataille.</p>
+
+  <div class="card">
+    <h2 style="margin-top:0">Le modèle en trois règles</h2>
+    <ol>
+      <li><b>Chaque nombre est un soldat</b> ; son signe est la couleur de sa veste (vert +, rouge −).</li>
+      <li><b>Un signe devant une parenthèse est un ordre</b> donné aux soldats sélectionnés : + fidèles (ils gardent leur veste), − traîtres (ils <b>retournent leur veste</b>). L'ordre exécuté, la sélection (les parenthèses) disparaît.</li>
+      <li><b>Bataille</b> : la force d'un soldat est son nombre sans le signe. Même couleur → alliance (les forces s'additionnent) ; couleurs opposées → affrontement, le plus fort gagne et il lui reste la différence des forces.</li>
+    </ol>
+    <p>Pourquoi ce choix : la place du signe suffit à dire son rôle. <b>Devant une parenthèse, c'est un ordre ; devant un nombre, c'est une couleur.</b> L'élève n'a pas d'histoire à se raconter. Le passage à l'écriture sans parenthèses n'est plus un chapitre à part : c'est la fin du geste « exécuter les ordres », refait à chaque calcul. Le piège <span style="font-family:var(--math)">−3 − 8 = +11</span> est désamorcé par la règle « pas de parenthèse, pas d'ordre ». La règle des signes du produit reste cohérente : retourner une veste, c'est multiplier par (−1).</p>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0">Les 8 missions</h2>
+    <p>Chaque mission a 3 niveaux et des séries de 10 questions. Au niveau 1, les soldats sont affichés automatiquement ; ensuite, ils ne sont visibles que sur demande, pour que l'élève s'en passe peu à peu. Les étoiles sont gardées dans le navigateur de l'appareil, et aucune donnée n'est envoyée.</p>
+    <table>
+      <tr><th>Mission</th><th>Exemple</th><th>Difficulté travaillée</th></tr>
+      <tr><td>1. La bataille</td><td class="m">−6 + 7</td><td>Sens de la somme. Niveau 3 : grands nombres, impossibles à compter, ce qui oblige à calculer la différence.</td></tr>
+      <tr><td>2. Les ordres</td><td class="m">−(−5)</td><td>Opposé : fidèle ou traître. Niveau 3 : doubles ordres et décimaux.</td></tr>
+      <tr><td>3. Fidèles et traîtres</td><td class="m">(+7) − (−8)</td><td>En deux étapes : l'élève écrit d'abord la ligne sans parenthèses (vérifiée soldat par soldat), puis le résultat.</td></tr>
+      <tr><td>4. Longues batailles</td><td class="m">−3 − 8 + 5 − 2</td><td>Regrouper les verts et les rouges.</td></tr>
+      <tr><td>5. Déguisements</td><td class="m">7 − 8 = (+7) − ( … )</td><td>Conversion dans l'autre sens : a + (−b) = a − b = a − (+b).</td></tr>
+      <tr><td>6. Grandes manœuvres</td><td class="m">(+2) − (−8) + (−6)</td><td>Expressions longues (comme les exercices 6 et 7 de la fiche d'AP).</td></tr>
+      <tr><td>7. Sélection de groupe</td><td class="m">5 − (3 − 8)</td><td>Révision 4e : un ordre « − » s'adresse à tous les soldats de la parenthèse.</td></tr>
+      <tr><td>8. Contre-espionnage</td><td class="m">−3 − 8 ou (−3) × (−8)</td><td>Distinguer somme et produit (pratique entrelacée) ; niveau 2 en vrai/faux sur les erreurs classiques.</td></tr>
+    </table>
+    <p>Quand l'élève se trompe, l'appli <b>diagnostique l'erreur probable</b> : ordre non exécuté, ordre appliqué au seul premier soldat, « deux moins font plus » dans une somme, valeurs ajoutées au lieu d'annulées, mauvaise couleur. Il a droit à un second essai, puis la bonne réponse s'affiche avec un bouton <b>Rejouer la bataille</b>, qui anime son calcul étape par étape.</p>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0">Aide-moi</h2>
+    <p>L'élève tape le calcul de sa fiche, par exemple <span style="font-family:var(--math)">−6 − (−7)</span>. L'appli affiche les soldats et les ordres, puis rappelle la méthode étape par étape, sous forme de questions. Elle <b>ne donne jamais la réponse</b>. L'élève peut faire vérifier sa ligne sans parenthèses et son résultat : l'appli dit seulement si c'est juste et, sinon, où chercher l'erreur. Les produits sont reconnus et renvoient vers la règle des signes.</p>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0">Fiche imprimable</h2>
+    <ul>
+      <li>10 exercices sur 3 pages A4, construits sur le modèle : <b>ordre ou couleur ?</b> (entourer les ordres, sans calculer), les ordres, <b>des soldats au calcul</b> (passer du dessin à l'écriture), la bataille (dont des décimaux), les traîtres, exécuter les ordres, <b>déguisements</b>, expressions A à H, sélection de groupe, sommes et produits.</li>
+      <li><b>Série n°</b> : chaque numéro donne toujours la même fiche. Vous pouvez donc distribuer des séries différentes et imprimer le corrigé correspondant (case « Corrigé »).</li>
+      <li>Les soldats dessinés portent leur nombre avec son signe : ils restent lisibles en impression noir et blanc. Dans le corrigé, les ordres de l'exercice 1 sont entourés.</li>
+      <li>Le <b>QR code</b> renvoie à l'adresse réglée dans « Réglages ». Sa génération nécessite une connexion internet au moment de l'impression.</li>
+      <li>Dans « Réglages », vous pouvez retirer des exercices (par exemple « Sélection de groupe » en 5e).</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0">Mise en ligne</h2>
+    <p>Le site est entièrement statique : des fichiers HTML, CSS et JS, sans serveur ni base de données. Il fonctionne sur GitHub Pages, comme l'appli « temps de réaction ». L'adresse prévue par défaut pour le QR code est <code>https://sebastiennam.github.io/guerre-relatifs/</code>. Si vous en choisissez une autre, changez-la dans les réglages de la fiche.</p>
+  </div>
+</main>
+</body>
+</html>

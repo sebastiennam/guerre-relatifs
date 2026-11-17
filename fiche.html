@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fiche — Guerre des relatifs</title>
+<style>
+  :root { --g: #1e9a4a; --r: #d63a3a; --ordre: #3b3f8f; --ink: #1a1a1a; --corr: #c0261f; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #e9e7e2; color: var(--ink); font-family: Calibri, "Segoe UI", Arial, sans-serif; font-size: 12pt; }
+  .ctrl { position: sticky; top: 0; z-index: 5; background: #2b2f3a; color: #fff; padding: 10px 16px; display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; font-family: "Segoe UI", Arial, sans-serif; font-size: 14px; }
+  .ctrl a { color: #fff; }
+  .ctrl input[type=number] { width: 70px; }
+  .ctrl input[type=url] { width: 330px; max-width: 100%; }
+  .ctrl input { font: inherit; padding: 4px 6px; border-radius: 6px; border: 0; }
+  .ctrl button { font: inherit; padding: 6px 12px; border-radius: 8px; border: 0; cursor: pointer; background: #fff; color: #2b2f3a; font-weight: 600; }
+  .ctrl button.main { background: #1e9a4a; color: #fff; }
+  .ctrl label { display: inline-flex; gap: 5px; align-items: center; white-space: nowrap; }
+  .ctrl details { width: 100%; }
+  .ctrl summary { cursor: pointer; }
+  .secs { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 6px; }
+
+  .page { width: 210mm; min-height: 297mm; margin: 14px auto; background: #fff; padding: 11mm 12mm; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+  header.fh { display: flex; gap: 12px; align-items: flex-start; border-bottom: 2px solid #222; padding-bottom: 6px; margin-bottom: 8px; }
+  header.fh .t { flex: 1; }
+  header.fh h1 { font-size: 17pt; margin: 0 0 4px; }
+  header.fh .who { font-size: 11pt; }
+  .qr { text-align: center; font-size: 8.5pt; width: 32mm; }
+  .qr #qrcode { width: 26mm; height: 26mm; margin: 0 auto 2px; }
+  .qr #qrcode img, .qr #qrcode canvas { width: 26mm !important; height: 26mm !important; }
+  .qr .u { word-break: break-all; }
+
+  .memo { border: 1.5px solid #222; border-radius: 6px; padding: 5px 9px; margin-bottom: 8px; font-size: 10.5pt; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .memo b.g { color: var(--g); } .memo b.r { color: var(--r); }
+  .memo h3 { margin: 0 0 2px; font-size: 11pt; }
+  .memo p { margin: 0; }
+  .memo .ex { grid-column: 1 / -1; font-family: "Cambria Math", Cambria, serif; border-top: 1px dashed #999; padding-top: 3px; }
+
+  section.exo { margin: 0 0 9px; break-inside: avoid; }
+  section.exo.split { break-inside: auto; }
+  h2 { font-size: 12.5pt; margin: 4px 0 4px; }
+  h2 u { text-decoration: underline; }
+  h2 small { font-weight: normal; font-size: 10.5pt; }
+  .m { font-family: "Cambria Math", Cambria, serif; font-size: 12pt; white-space: nowrap; }
+  .blank { display: inline-block; min-width: 14mm; border-bottom: 1px dotted #777; text-align: center; }
+  .blank.s { min-width: 7mm; }
+  .blank.l { min-width: 26mm; }
+  .blank.xl { min-width: 45mm; }
+  .corr { color: var(--corr); font-weight: 700; }
+
+  .g4 { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid #333; }
+  .g4 > div { padding: 4px 6px; border-right: 1px solid #333; border-bottom: 1px solid #ccc; }
+  .g4 > div:nth-child(4n) { border-right: 0; }
+  .g4.boxes { border-style: dashed; }
+  .g4.boxes > div { border-right: 1px dashed #333; border-bottom: 1px dashed #333; padding: 5px 7px; min-height: 20mm; }
+  .g4.boxes > div:nth-child(4n) { border-right: 0; }
+  .g4.boxes .ln { margin-top: 4px; }
+  .g3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px 14px; }
+  .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 22px; }
+  .g4f { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px 12px; }
+
+  .so { display: inline-flex; flex-direction: column; align-items: center; margin: 0 1.2mm 0 0; vertical-align: bottom; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .so .hd { width: 3.2mm; height: 3.2mm; border-radius: 50%; background: #f0cfa5; border: .3mm solid #8a6440; display: block; }
+  .so b { margin-top: .3mm; min-width: 10mm; padding: .5mm 1.6mm .7mm; border-radius: 2.6mm 2.6mm 1mm 1mm; color: #fff; font-family: "Cambria Math", Cambria, serif; font-size: 11.5pt; text-align: center; }
+  .so.g b { background: var(--g); }
+  .so.r b { background: var(--r); }
+  .srow { display: block; margin-bottom: 1.5mm; }
+  .srow .line { display: flex; margin-bottom: 1mm; }
+  .os { display: inline-block; padding: 0 .5mm; }
+  .corrmode .os { border: .45mm solid var(--corr); border-radius: 50%; color: var(--corr); font-weight: 700; padding: 0 1mm; }
+
+  .long { break-inside: avoid; }
+  .long .ln { margin: 5px 0 0; }
+  .long .ln .blank { min-width: 70mm; }
+  .note { font-size: 10pt; color: #444; margin: 0 0 4px; }
+  .foot { font-size: 9pt; color: #666; text-align: center; margin-top: 6px; }
+
+  @page { size: A4; margin: 0; }
+  @media print {
+    body { background: #fff; }
+    .ctrl { display: none; }
+    .page { margin: 0; box-shadow: none; width: auto; min-height: auto; padding: 10mm 12mm; }
+    .pb { break-before: page; }
+  }
+</style>
+</head>
+<body>
+<div class="ctrl">
+  <strong>Fiche élève</strong>
+  <label>Série n° <input type="number" id="serie" min="1" max="9999" value="1"></label>
+  <button id="new">Nouvelle série</button>
+  <label><input type="checkbox" id="corrige"> Corrigé</label>
+  <button class="main" onclick="window.print()">Imprimer</button>
+  <a href="index.html">← Retour à l'appli</a>
+  <details>
+    <summary>Réglages : adresse du QR code et exercices à inclure</summary>
+    <div style="margin-top:6px"><label>Adresse du site d'entraînement : <input type="url" id="url"></label></div>
+    <div class="secs" id="secs"></div>
+  </details>
+</div>
+
+<div class="page" id="page"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/fiche.js"></script>
+</body>
+</html>
