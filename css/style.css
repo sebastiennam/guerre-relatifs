@@ -184,6 +184,20 @@ main { max-width: 1180px; margin: 0 auto; padding: 22px 16px 70px; }
 .cmd.gone .par { opacity: 0; transform: scale(.2); }
 .cmd.gone .od { opacity: 0; transform: scale(.4) translateY(-10px); }
 .times { font: 800 34px var(--head); color: var(--muted); align-self: center; }
+/* chemin inverse (Déguisements) */
+.sd.mys .sd-veste, .sd.mys .sd-sleeve { fill: #64748b; }
+.sd.mys .sd-in { animation: mys 1.6s ease-in-out infinite; }
+@keyframes mys { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+.sd.pair .sd-num { outline: 3px solid var(--gold); }
+.od.q .od-p { background: #475569; box-shadow: 0 4px 0 #1e293b; }
+.od.q .od-t { color: var(--muted); }
+.pl-stage.rev { display: flex; flex-direction: column; gap: 6px; }
+.rv-lab { position: relative; z-index: 1; align-self: center; font: 800 13px var(--body, inherit); letter-spacing: .05em; text-transform: uppercase; color: #fff; background: rgba(0, 0, 0, .35); border-radius: 99px; padding: 3px 12px; }
+.pl-stage.rev .pl-line + .rv-lab { margin-top: 10px; }
+.lvbtn.tuto { border-color: color-mix(in srgb, var(--acc, #8b5cf6) 60%, transparent); }
+.lvbtn.tuto.todo { box-shadow: 0 0 0 0 rgba(251, 191, 36, .6); animation: pulse 1.6s infinite; }
+.lv-r .ok { color: #4ade80; }
+.mc-tuto { font-size: 13px; color: var(--gold); font-weight: 800; }
 
 /* éléments à toucher */
 .tap { cursor: pointer; position: relative; }

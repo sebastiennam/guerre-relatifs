@@ -40,11 +40,14 @@
       { t: 'Chaque camp s\'allie', d: 'Les rouges : 3 + 8 + 2 = 13. Le vert : 5.', until: 'alliance' },
       { t: 'Une seule bataille', d: 'Le rouge (13) bat le vert (5) : il lui reste 8, donc <b>' + M + '8</b>.', until: 'result' },
     ],
+    // Chemin inverse : on part de l'armée (sans parenthèses) et on retrouve l'écriture avec parenthèses
     deguise: [
-      { t: 'Une armée…', d: '7 ' + M + ' 8, c\'est un vert de force 7 et un rouge de force 8.', expr: '7-8', until: 'lineup' },
-      { t: '…déguisée avec l\'ordre +', d: '(+7) + (' + M + '8) : l\'ordre + laisse le soldat rouge. On retrouve la même armée : <b>7 ' + M + ' 8</b>.', expr: '(+7)+(-8)', until: 'orders' },
-      { t: '…déguisée avec l\'ordre ' + M, d: '(+7) ' + M + ' (+8) : le +8 est un traître, il retourne sa veste et devient rouge. Encore la même armée : <b>7 ' + M + ' 8</b> !', expr: '(+7)-(+8)', until: 'orders' },
-      { t: 'Trouve le soldat caché', d: 'Pour retrouver le soldat entre parenthèses :', expr: null, html: steps(['Ordre <b>+</b> : il garde sa veste, il porte donc <b>déjà la bonne couleur</b>.', 'Ordre <b>' + M + '</b> : il va retourner sa veste, il porte donc <b>la couleur opposée</b>.']) },
+      { t: 'Le chemin inverse', d: 'Jusqu\'ici, on partait des parenthèses pour arriver à l\'armée. Ici, c\'est <b>l\'inverse</b> : on connaît l\'armée <b>7 ' + M + ' 8</b> (en haut) et on doit l\'écrire avec des parenthèses (en bas). Un soldat est caché derrière le <b>?</b> : à toi de le trouver.', expr: '(+7)+(-8)', rev: true, until: 'lineup' },
+      { t: 'Avec l\'ordre + : la même veste', d: '7 ' + M + ' 8 = (+7) + ( … ). L\'ordre <b>+</b> ne change rien : le soldat caché garde sa veste. Il porte donc <b>déjà</b> la veste qu\'il doit avoir à la fin : rouge, <b>' + M + '8</b>. <i>Touche les éléments qui brillent.</i>', expr: '(+7)+(-8)', rev: true },
+      { t: 'Avec l\'ordre ' + M + ' : la veste opposée', d: '7 ' + M + ' 8 = (+7) ' + M + ' ( … ). L\'ordre <b>' + M + '</b> va lui faire retourner sa veste. Pour être rouge <b>après</b> l\'ordre, il doit être vert <b>avant</b> : c\'est <b>+8</b>.', expr: '(+7)-(+8)', rev: true },
+      { t: 'Dans l\'autre sens', d: '3 + 5 = (+3) ' + M + ' ( … ). À la fin, il faut un soldat <b>vert</b>. L\'ordre ' + M + ' retourne sa veste, donc il est <b>rouge</b> avant : <b>' + M + '5</b>.', expr: '(+3)-(-5)', rev: true },
+      { t: 'Niveau 3 : l\'ordre est caché', d: M + '4 + 6 = (' + M + '4) … (' + M + '6). Cette fois, on voit le soldat, mais pas l\'ordre. Il porte une veste rouge, et il en faut une verte : il doit la retourner, donc l\'ordre est <b>' + M + '</b>.', expr: '(-4)-(-6)', rev: true, hideOrder: true },
+      { t: 'La méthode', d: 'Pour chaque déguisement :', expr: null, html: steps(['Regarde en haut la <b>couleur</b> que doit avoir le soldat à la fin.', 'Ordre <b>+</b> : il garde sa veste, il porte donc <b>déjà cette couleur</b>.', 'Ordre <b>' + M + '</b> : il va retourner sa veste, il porte donc <b>la couleur opposée</b>.', 'Vérifie : en exécutant l\'ordre, tu dois retrouver <b>la même armée</b>.']) },
     ],
     manoeuvres: [
       { t: 'Plusieurs ordres', d: 'Chaque parenthèse reçoit <b>son propre ordre</b>.', expr: '(+2)-(-8)+(-6)', until: 'lineup' },

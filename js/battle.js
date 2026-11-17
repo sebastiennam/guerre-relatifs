@@ -471,7 +471,145 @@
       await wait(300);
     }
 
+    /* ---------- chemin inverse (mission Déguisements) : de l'armée vers l'écriture avec parenthèses ---------- */
+    // En haut : l'armée à obtenir. En bas : son déguisement, où un soldat (ou un ordre) est caché.
+    let treg = null, hc = null;
+    const tline = h('div', 'pl-line');
+    const labT = h('div', 'rv-lab', '🎯 L\'armée à obtenir');
+    const labD = h('div', 'rv-lab', '🕵️ Son déguisement');
+    const twin = (s) => treg.soldiers[reg.soldiers.indexOf(s)];
+    const colorTxt = (s) => (s === '-' ? 'rouge' : 'verte');
+    function holeDisplay() {
+      const str = GR.str(node), k = str.lastIndexOf('(');
+      if (!opts.hideOrder) return str.slice(0, k) + '( … )';
+      return str.slice(0, k).trimEnd().slice(0, -1) + '… ' + str.slice(k);
+    }
+    function revLineup() {
+      stage.classList.add('rev');
+      stage.insertBefore(labT, line); stage.insertBefore(tline, line); stage.insertBefore(labD, line);
+      tline.innerHTML = ''; line.innerHTML = ''; field.innerHTML = '';
+      treg = build(GR.parse(GR.flatStr(flat)), tline, opts.size);
+      reg = build(node, line, opts.size);
+      hc = reg.cmds[reg.cmds.length - 1];
+      if (opts.hideOrder) {
+        hc.badge.classList.remove('m', 'p'); hc.badge.classList.add('q');
+        hc.badge.querySelector('.od-p').textContent = '?';
+        hc.badge.querySelector('.od-t').textContent = 'quel ordre ?';
+      } else hc.soldiers.forEach((s) => { s._real = s._s; s._hidden = true; s.classList.remove('g', 'r'); s.classList.add('z', 'mys'); setLabel(s); });
+      exprEl.innerHTML = '<span class="e0">' + GR.flatStr(flat) + ' = ' + holeDisplay() + '</span>';
+      [...treg.soldiers, ...reg.soldiers].forEach((s, i) => s.animate([{ transform: 'translateY(24px) scale(.5)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 420, delay: i * 70, easing: 'cubic-bezier(.2,.9,.3,1.3)', fill: 'backwards' }));
+      say('🕵️', 'Ici, on fait le <b>chemin inverse</b> : on connaît l\'<b>armée</b> (en haut) et on cherche son <b>déguisement</b> avec parenthèses (en bas). ' +
+        (opts.hideOrder ? 'C\'est l\'<b>ordre</b> qui est caché.' : 'Un soldat est caché derrière le <b>?</b>') + ' Après les ordres, les deux lignes doivent donner <b>exactement les mêmes soldats</b>.');
+    }
+    // Les soldats déjà visibles correspondent à ceux d'en haut
+    async function revMatch() {
+      const vis = reg.soldiers.filter((s) => !hc.soldiers.includes(s));
+      say('🔗', ia ? '👆 <b>Touche le soldat visible</b> du déguisement pour le comparer à l\'armée.' : 'On compare d\'abord les soldats visibles avec l\'armée.');
+      await run(vis, async (s) => {
+        const t = twin(s);
+        bubble(s, 'Pas d\'ordre : il garde sa veste → comme en haut ✓', 'p');
+        [s, t].forEach((x) => { x.classList.add('glow'); sparkle(x, 8, 'gold'); });
+        await wait(1300);
+        [s, t].forEach((x) => x.classList.remove('glow'));
+        t.classList.add('pair');
+      }, 300);
+      say('🔗', 'Ce soldat est <b>déjà le même</b> qu\'en haut. Reste à trouver ' + (opts.hideOrder ? 'l\'<b>ordre</b> caché.' : 'le soldat <b>caché</b>.'));
+      await wait(900);
+    }
+    // Soldat caché : on lit l'ordre et la couleur voulue
+    async function revOrder() {
+      const s = hc.soldiers[0], t = twin(s), o = hc.order;
+      say('📣', ia ? '👆 <b>Touche l\'ordre</b> devant la parenthèse : que va faire le soldat caché ?' : 'Regardons l\'<b>ordre</b> devant la parenthèse.');
+      await run([hc.badge], async () => {
+        hc.badge.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.3)' }, { transform: 'scale(1)' }], { duration: 500 });
+        bubble(hc.badge, o === '-' ? 'Ordre ' + M + ' : il va retourner sa veste' : 'Ordre + : il gardera sa veste', o === '-' ? 'm' : 'p');
+        hc.sel.classList.add('hl');
+        await wait(900);
+        t.classList.add('glow');
+        bubble(t, 'Après l\'ordre, il doit être ' + GR.fmt(t._s === '-' ? -t._v : t._v, true), t._s === '-' ? 'r' : 'g');
+        await wait(1200);
+      });
+      const want = colorTxt(t._s);
+      say(o === '-' ? '🔄' : '🛡️', 'Après l\'ordre, le soldat caché doit porter une veste <b>' + want + '</b>, comme en haut. ' +
+        (o === '-' ? 'Ordre <b>' + M + '</b> : il va la retourner, donc <b>avant l\'ordre</b> il porte la veste <b>opposée</b> : ' + colorTxt(t._s === '-' ? '+' : '-') + '.' : 'Ordre <b>+</b> : il garde sa veste, donc il porte <b>déjà</b> la veste ' + want + '.') +
+        (opts.showResult && !opts.ask ? '' : ' <b>Quel est ce soldat ?</b>'));
+      await wait(800);
+    }
+    async function revReveal() {
+      say('🔍', ia ? '👆 <b>Touche le ?</b> pour démasquer le soldat caché.' : 'On démasque le soldat caché.');
+      await run(hc.soldiers, async (s) => {
+        s._hidden = false; s.classList.remove('mys');
+        await flipSoldier(s, s._real);
+        bubble(s, 'Le soldat caché : ' + GR.fmt(s._s === '-' ? -s._v : s._v, true), s._s === '-' ? 'r' : 'g');
+        await wait(900);
+      }, 300);
+      const s = hc.soldiers[0];
+      say('🔍', 'Le soldat caché est <b>' + GR.fmt(s._s === '-' ? -s._v : s._v, true) + '</b>.');
+      exprEl.innerHTML = '<span class="e0">' + GR.flatStr(flat) + ' = ' + GR.str(node) + '</span>';
+      await wait(500);
+    }
+    // Ordre caché : on compare la veste du soldat avec celle voulue
+    async function revCompare() {
+      const s = hc.soldiers[0], t = twin(s);
+      say('👀', ia ? '👆 <b>Touche le soldat</b> dans la parenthèse : porte-t-il déjà la bonne veste ?' : 'Le soldat dans la parenthèse porte-t-il déjà la bonne veste ?');
+      await run([s], async () => {
+        [s, t].forEach((x) => x.classList.add('glow'));
+        bubble(t, 'Il faut une veste ' + colorTxt(t._s), t._s === '-' ? 'r' : 'g');
+        await wait(900);
+        bubble(s, 'Il porte une veste ' + colorTxt(s._s), s._s === '-' ? 'r' : 'g');
+        await wait(1300);
+        [s, t].forEach((x) => x.classList.remove('glow'));
+      });
+      const same = s._s === t._s;
+      say(same ? '🛡️' : '🔄', same ? 'Il porte <b>déjà la bonne veste</b> : il doit la garder → il faut l\'ordre <b>+</b> (fidèle).' : 'Il porte la <b>mauvaise veste</b> : il doit la retourner → il faut l\'ordre <b>' + M + '</b> (traître).');
+      await wait(800);
+    }
+    async function revRevealOrder() {
+      const o = hc.order;
+      say('📣', ia ? '👆 <b>Touche le ?</b> pour placer l\'ordre.' : 'On place l\'ordre.');
+      await run([hc.badge], async () => {
+        hc.badge.classList.remove('q'); hc.badge.classList.add(o === '-' ? 'm' : 'p');
+        hc.badge.querySelector('.od-p').textContent = o === '-' ? M : '+';
+        hc.badge.querySelector('.od-t').textContent = o === '-' ? 'ordre : traîtres' : 'ordre : fidèles';
+        hc.badge.animate([{ transform: 'scale(.4)' }, { transform: 'scale(1.3)' }, { transform: 'none' }], { duration: 520, easing: 'ease-out' });
+        sparkle(hc.badge, 10, 'gold');
+        await wait(700);
+      });
+      exprEl.innerHTML = '<span class="e0">' + GR.flatStr(flat) + ' = ' + GR.str(node) + '</span>';
+      await wait(400);
+    }
+    // Vérification : on exécute les ordres et on retrouve la même armée
+    async function revCheck() {
+      const tg = hc.badge || hc.sel;
+      say('✅', ia ? '👆 <b>Vérifions : touche l\'ordre</b> pour l\'exécuter.' : 'Vérifions : on exécute l\'ordre.');
+      await run([tg], () => execCmd(hc));
+      reg.cmds.forEach((c) => { if (c !== hc) c.sel.classList.add('ok'); c.el.classList.add('gone'); });
+      await wait(600);
+      const sols = reg.soldiers;
+      flipLayout(sols, () => { line.innerHTML = ''; sols.forEach((s, i) => { s._explicit = i > 0 || s._s === '-'; setLabel(s); line.appendChild(s); }); }, 550);
+      await wait(650);
+      sols.forEach((s, i) => { s.classList.add('glow'); twin(s).classList.add('glow'); setTimeout(() => sparkle(s, 8, 'gold'), i * 150); });
+      say('🎉', 'Après l\'ordre, on retrouve <b>la même armée</b> qu\'en haut : <b>' + GR.flatStr(flat) + '</b>. Le déguisement est juste !');
+      exprEl.insertAdjacentHTML('beforeend', ' <span class="res g">✓ même armée</span>');
+      if (GR.sfx) GR.sfx('star');
+      await wait(900);
+      sols.forEach((s) => { s.classList.remove('glow'); twin(s).classList.remove('glow'); });
+    }
+
     /* ---------- liste des étapes ---------- */
+    if (opts.reverse) {
+      flat = GR.flatten(node);
+      api.stages.push({ id: 'lineup', label: '🕵️ L\'armée et son déguisement', run: revLineup });
+      api.stages.push({ id: 'match', label: '🔗 Le soldat visible', run: revMatch });
+      if (opts.hideOrder) {
+        api.stages.push({ id: 'compare', label: '👀 Bonne veste ou pas ?', run: revCompare });
+        if (opts.showResult) api.stages.push({ id: 'reveal', label: '📣 L\'ordre', run: revRevealOrder });
+      } else {
+        api.stages.push({ id: 'order', label: '📣 L\'ordre', run: revOrder });
+        if (opts.showResult) api.stages.push({ id: 'reveal', label: '🔍 Le soldat caché', run: revReveal });
+      }
+      if (opts.showResult) api.stages.push({ id: 'check', label: '✅ Vérifier', run: revCheck });
+    } else {
     api.stages.push({ id: 'lineup', label: '🪖 Les soldats', run: lineup });
     const hasImplicit = (function walk(items) { return items.some((n, i) => (n.kind === 'num' && i === 0 && !n.explicit && n.s === '+') || (n.kind === 'group' && walk(n.items)) || (n.kind === 'prod' && i === 0 && !n.explicit)); })(node.items);
     if (hasImplicit && (opts.mode === 'interactive' || opts.mode === 'auto')) api.stages.push({ id: 'implicit', label: '✳️ Le signe sous-entendu', run: implicitStage });
@@ -486,6 +624,7 @@
         if (b.G > 0 && b.R > 0) api.stages.push({ id: 'clash', label: '⚔️ La bataille', run: clash });
       }
       if (opts.showResult) api.stages.push({ id: 'result', label: '🏆 Le résultat', run: result });
+    }
     }
     if (opts.until) { const k = api.stages.findIndex((s) => s.id === opts.until); if (k >= 0) api.stages = api.stages.slice(0, k + 1); }
     if (opts.mode === 'static') api.stages = api.stages.slice(0, 1);
@@ -529,7 +668,8 @@
     if (opts.mode === 'interactive') ctrl.append(again, show);
     if (opts.mode === 'auto') ctrl.append(again);
 
-    lineup(); // la première étape est jouée tout de suite (synchrone)
+    api.stages[0].run(); // la première étape est jouée tout de suite (synchrone)
+    if (opts.reverse && !reg.soldiers.some((s) => !hc.soldiers.includes(s))) api.stages = api.stages.filter((s) => s.id !== 'match');
     api.done = 1;
     update();
     if (opts.mode === 'auto' || opts.mode === 'interactive') setTimeout(() => { if (!dead) api.play(); }, opts.mode === 'auto' ? 700 : 300);

@@ -149,7 +149,7 @@
       const card = h('button', 'mcard');
       card.style.setProperty('--acc', LOOK[m.id][1]);
       card.innerHTML = '<div class="mc-top"><span class="mc-ico">' + LOOK[m.id][0] + '</span><span class="mc-n">Mission ' + m.n + '</span><span class="mc-st">★ ' + st + ' / 9</span></div><h3>' + m.titre + '</h3><p>' + m.desc + '</p><div class="mc-demo"></div>' +
-        (state === 'locked' ? '<div class="mc-lock">🔒 Réussis le niveau 2 de la mission ' + (mi) + ' pour l\'ouvrir</div>' : '');
+        (state !== 'locked' && !tutoSeen(m.id) ? '<div class="mc-tuto">📖 Commence par le tutoriel</div>' : '') + (state === 'locked' ? '<div class="mc-lock">🔒 Réussis le niveau 2 de la mission ' + (mi) + ' pour l\'ouvrir</div>' : '');
       GR.lineupOnly(card.querySelector('.mc-demo'), GR.DEMOS[m.id], 'sm');
       card.onclick = () => { if (open) openSheet(mi); else { toast('🔒 Mission verrouillée : réussis d\'abord le niveau 2 de la mission ' + mi + '.'); card.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-6px)' }, { transform: 'translateX(6px)' }, { transform: 'translateX(0)' }], { duration: 300 }); } };
       stop.appendChild(card);
@@ -165,12 +165,16 @@
     const m = MISS[mi];
     const box = $('sheet-box');
     box.style.setProperty('--acc', LOOK[m.id][1]);
-    box.innerHTML = '<div class="mhead"><div class="sh-t"><span class="mc-ico big">' + LOOK[m.id][0] + '</span><div><div class="kicker">Mission ' + m.n + '</div><h2>' + m.titre + '</h2></div></div><button class="icon-btn" id="sheet-x" aria-label="Fermer">✕</button></div><p class="lead">' + m.desc + '</p><div id="sheet-demo" style="margin-top:12px"></div><div class="actions"><button class="btn violet" id="sheet-tuto">📖 Tutoriel animé</button></div><div class="lvls" id="sheet-lvls"></div><p class="note">🔓 Il faut <b>7/10</b> pour réussir un niveau. Réussir le <b>niveau 2</b> débloque la mission suivante ; le niveau 3 est un défi bonus.</p>';
+    box.innerHTML = '<div class="mhead"><div class="sh-t"><span class="mc-ico big">' + LOOK[m.id][0] + '</span><div><div class="kicker">Mission ' + m.n + '</div><h2>' + m.titre + '</h2></div></div><button class="icon-btn" id="sheet-x" aria-label="Fermer">✕</button></div><p class="lead">' + m.desc + '</p><div class="lvls" id="sheet-lvls"></div><p class="note">🔓 Il faut <b>7/10</b> pour réussir un niveau. Réussir le <b>niveau 2</b> débloque la mission suivante ; le niveau 3 est un défi bonus.</p>';
     $('sheet').classList.remove('hidden');
     killModalPlayers();
-    modalPlayers.push(GR.Player($('sheet-demo'), GR.DEMOS[m.id], { mode: 'auto', showResult: true, onRestart: (p) => modalPlayers.push(p) }));
     $('sheet-x').onclick = closeAllModals;
-    $('sheet-tuto').onclick = () => { closeAllModals(); openTuto(m.id, null); };
+    // Étape 0 : le tutoriel, obligatoire avant le niveau 1
+    const seen = tutoSeen(m.id);
+    const tb = h('button', 'lvbtn tuto' + (seen ? '' : ' todo'));
+    tb.innerHTML = '<div class="lv-ico">📖</div><div><div class="lv-n">Tutoriel animé</div><div class="lv-d">' + (seen ? 'À revoir quand tu veux' : '<b>Obligatoire</b> : à faire avant le niveau 1') + '</div></div><div class="lv-r">' + (seen ? '<div class="ok">✓ fait</div>' : '<div class="lv-d">à faire</div>') + '</div>';
+    tb.onclick = () => { closeAllModals(); openTuto(m.id, seen ? null : () => startSeries(m.id, 1), !seen); };
+    $('sheet-lvls').appendChild(tb);
     const icons = ['🎓', '⚔️', '🏆'];
     const names = ['Niveau 1 · guidé et animé', 'Niveau 2 · sans aide', 'Niveau 3 · défi bonus'];
     [1, 2, 3].forEach((l) => {
@@ -179,14 +183,14 @@
       const b = h('button', 'lvbtn');
       b.disabled = !ok;
       b.innerHTML = '<div class="lv-ico">' + (ok ? icons[l - 1] : '🔒') + '</div><div><div class="lv-n">' + names[l - 1] + '</div><div class="lv-d">' + m.lv[l - 1] + '</div></div><div class="lv-r">' +
-        (ok ? '<div class="st">' + '★'.repeat(starsOf(bs)) + '<span style="opacity:.25">' + '★'.repeat(3 - starsOf(bs)) + '</span></div><div class="lv-d">' + (bs ? 'record ' + bs + '/10' : 'à faire') + '</div>' : '<div class="lv-d">réussis le niveau ' + (l - 1) + '</div>') + '</div>';
+        (ok ? '<div class="st">' + '★'.repeat(starsOf(bs)) + '<span style="opacity:.25">' + '★'.repeat(3 - starsOf(bs)) + '</span></div><div class="lv-d">' + (bs ? 'record ' + bs + '/10' : l === 1 && !seen ? 'après le tutoriel' : 'à faire') + '</div>' : '<div class="lv-d">réussis le niveau ' + (l - 1) + '</div>') + '</div>';
       b.onclick = () => { closeAllModals(); startLevel(m.id, l); };
       $('sheet-lvls').appendChild(b);
     });
   }
-  // Le tutoriel est obligatoire : aucun niveau ne démarre tant qu'il n'a pas été suivi jusqu'au bout
+  // Le tutoriel est obligatoire avant le niveau 1 (il n'est pas rejoué pour les niveaux 2 et 3)
   function startLevel(mid, l) {
-    if (!tutoSeen(mid)) openTuto(mid, () => startSeries(mid, l), true);
+    if (l === 1 && !tutoSeen(mid)) openTuto(mid, () => startSeries(mid, l), true);
     else startSeries(mid, l);
   }
 
@@ -230,7 +234,7 @@
     if (expr === undefined) for (let k = i; k >= 0; k--) if (slides[k].expr !== undefined) { expr = slides[k].expr; break; }
     T.player = null;
     if (expr) {
-      T.player = GR.Player(demo, expr, { mode: 'interactive', until: s.until || null, showResult: true, onRestart: (p) => { modalPlayers.push(p); if (T) T.player = p; } });
+      T.player = GR.Player(demo, expr, { mode: 'interactive', until: s.until || null, showResult: true, reverse: !!s.rev, hideOrder: !!s.hideOrder, onRestart: (p) => { modalPlayers.push(p); if (T) T.player = p; } });
       modalPlayers.push(T.player);
     } else demo.innerHTML = s.html || '';
     const slideT = T;
@@ -251,7 +255,7 @@
   };
   $('tuto-prev').onclick = () => { if (T.i > 0) { T.i--; renderTuto(); } };
   function quitTuto() {
-    if (T && T.mandatory) toast('📖 Le tutoriel est obligatoire : termine-le pour commencer la mission.');
+    if (T && T.mandatory) toast('📖 Le tutoriel est obligatoire : termine-le pour commencer le niveau 1.');
     closeAllModals(); T = null;
   }
   $('tuto-x').onclick = quitTuto;
@@ -318,7 +322,7 @@
     let q;
     for (let k = 0; k < 25; k++) { q = GR.generate(S.mission, S.level); if (!S.recent.includes(q.display)) break; }
     S.recent.push(q.display);
-    const guided = S.level === 1 && S.i < GUIDED && (q.kind === 'result' || q.kind === 'twostep') && q.node && !q.node.hasProd;
+    const guided = S.level === 1 && S.i < GUIDED && (((q.kind === 'result' || q.kind === 'twostep') && q.node && !q.node.hasProd) || q.kind.startsWith('deguise'));
     Object.assign(S, { q, step: 0, tries: 0, failed: false, gotRight: false, done: false, input: null, guided });
     S.i++;
     renderQuestion();
@@ -328,9 +332,10 @@
   function setStage(mode, showResult, extra) {
     killPlayers();
     const stg = $('q-stage');
-    const src = S.q.kind.startsWith('deguise') && mode === 'static' ? GR.parse(S.q.expr) : stageSource(S.q);
+    const src = stageSource(S.q);
     if (!src) { stg.innerHTML = ''; stg.classList.add('hidden'); return null; }
     stg.classList.remove('hidden');
+    if (S.q.kind.startsWith('deguise')) extra = Object.assign({ reverse: true, hideOrder: S.q.kind === 'deguise-ordre' }, extra || {});
     S.player = keep(GR.Player(stg, src, Object.assign({ mode, showResult, hideFlat: !showResult, onRestart: (p) => { S.player = keep(p); } }, extra || {})));
     return S.player;
   }
@@ -344,7 +349,8 @@
     ['q-fb', 'q-actions', 'q-hints', 'q-zone'].forEach((id) => { $(id).innerHTML = ''; });
     $('q-stage').innerHTML = '';
     killPlayers();
-    if (S.guided) setStage('guided', false);
+    if (S.guided && q.kind.startsWith('deguise')) setStage('guided', true, { ask: true });
+    else if (S.guided) setStage('guided', false);
     else if (S.level === 1 && q.kind !== 'vf') setStage('static', false);
     else $('q-stage').classList.add('hidden');
     $('btn-sold').textContent = '👁 Soldats';
@@ -357,7 +363,8 @@
   async function guidedStep() {
     const q = S.q, p = S.player;
     $('q-zone').innerHTML = '';
-    const rem = p.remaining();
+    let rem = p.remaining();
+    if (q.kind.startsWith('deguise')) rem = rem.slice(0, Math.max(0, rem.indexOf('reveal')));
     if (q.kind === 'twostep' && S.step === 0 && !rem.includes('orders')) {
       tag('Étape 1 : regarde les soldats et écris la ligne sans parenthèses');
       addInputRow('=', true, 'ligne sans parenthèses');
@@ -377,6 +384,7 @@
       if (ok && S.player === p && !S.done) guidedStep();
       return;
     }
+    if (q.kind.startsWith('deguise')) { renderStep(); return; }
     tag(q.kind === 'twostep' ? 'Étape 2 : quel est le résultat ? (n\'oublie pas la couleur, donc le signe)' : 'À toi : quel est le résultat ?');
     addInputRow('=', false);
   }
@@ -541,7 +549,17 @@
     act.innerHTML = '';
     const src = stageSource(q);
     const animable = src && (!src.hasProd || (src.items.length === 1 && src.items[0].kind === 'prod'));
-    if (S.guided) {
+    if (S.guided && q.kind.startsWith('deguise')) {
+      // on termine la même animation : démasquer le soldat, puis vérifier
+      tag('👆 Termine l’animation : démasque le soldat caché et vérifie');
+      const p = S.player;
+      p.play();
+      const skip = h('button', 'btn ghost sm', '👉 Montre-moi');
+      skip.onclick = () => p.skip();
+      act.appendChild(skip);
+      const tg = $('q-zone').lastElementChild;
+      const iv = setInterval(() => { if (p.isDone() || S.player !== p) { skip.remove(); if (tg) tg.remove(); clearInterval(iv); } }, 300);
+    } else if (S.guided) {
       const b = h('button', 'btn ghost', '↺ Rejouer la bataille');
       b.onclick = () => { setStage('interactive', true); b.remove(); };
       act.appendChild(b);
@@ -549,7 +567,7 @@
       setStage('interactive', true);
       $('q-stage').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     } else if (animable) {
-      const b = h('button', 'btn violet', '▶ Jouer la bataille');
+      const b = h('button', 'btn violet', q.kind.startsWith('deguise') ? '▶ Voir le déguisement' : '▶ Jouer la bataille');
       b.onclick = () => { setStage('interactive', true); b.remove(); };
       act.appendChild(b);
     }
