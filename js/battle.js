@@ -193,7 +193,7 @@
     const say = (ico, html) => {
       cap.innerHTML = '<span class="pl-ico">' + ico + '</span><span>' + html + '</span>';
       cap.classList.remove('pop'); void cap.offsetWidth; cap.classList.add('pop');
-      lastRead = { at: performance.now(), ms: GR.readTime(html) };
+      lastRead = { at: performance.now(), ms: GR.readTime(html) * (opts.light ? 0.5 : 1) };
     };
     let pauseEnd = null; // « Montre-moi » pendant une pause de lecture : on abrège la pause
     const readPause = () => new Promise((res, rej) => {
@@ -261,6 +261,7 @@
             t.classList.remove('tap');
             t.removeEventListener('click', fire);
             chain = chain.then(() => act(t)).then(() => { left--; if (left === 0) { skipFn = null; res(); } }).catch(rej);
+            if (opts.light && fired.size === 1 && targets.length > 1) setTimeout(() => { if (skipFn) skipFn(); }, 0); // mode allégé : une touche lance toute l'étape
           };
           t._fire = fire;
           t.addEventListener('click', fire);
@@ -475,8 +476,8 @@
     // En haut : l'armée à obtenir. En bas : son déguisement, où un soldat (ou un ordre) est caché.
     let treg = null, hc = null;
     const tline = h('div', 'pl-line');
-    const labT = h('div', 'rv-lab', '🎯 L\'armée à obtenir');
-    const labD = h('div', 'rv-lab', '🕵️ Son déguisement');
+    const labT = h('div', 'rv-lab', '🎯 Le calcul de départ');
+    const labD = h('div', 'rv-lab', '🕵️ Avec des parenthèses');
     const twin = (s) => treg.soldiers[reg.soldiers.indexOf(s)];
     const colorTxt = (s) => (s === '-' ? 'rouge' : 'verte');
     function holeDisplay() {
@@ -498,13 +499,13 @@
       } else hc.soldiers.forEach((s) => { s._real = s._s; s._hidden = true; s.classList.remove('g', 'r'); s.classList.add('z', 'mys'); setLabel(s); });
       exprEl.innerHTML = '<span class="e0">' + GR.flatStr(flat) + ' = ' + holeDisplay() + '</span>';
       [...treg.soldiers, ...reg.soldiers].forEach((s, i) => s.animate([{ transform: 'translateY(24px) scale(.5)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 420, delay: i * 70, easing: 'cubic-bezier(.2,.9,.3,1.3)', fill: 'backwards' }));
-      say('🕵️', 'Ici, on fait le <b>chemin inverse</b> : on connaît l\'<b>armée</b> (en haut) et on cherche son <b>déguisement</b> avec parenthèses (en bas). ' +
-        (opts.hideOrder ? 'C\'est l\'<b>ordre</b> qui est caché.' : 'Un soldat est caché derrière le <b>?</b>') + ' Après les ordres, les deux lignes doivent donner <b>exactement les mêmes soldats</b>.');
+      say('🕵️', 'On connaît le calcul (en haut), on cherche l\'écriture avec parenthèses (en bas). ' +
+        (opts.hideOrder ? 'C\'est l\'<b>ordre</b> qui est caché.' : 'Un soldat est caché derrière le <b>?</b>.'));
     }
     // Les soldats déjà visibles correspondent à ceux d'en haut
     async function revMatch() {
       const vis = reg.soldiers.filter((s) => !hc.soldiers.includes(s));
-      say('🔗', ia ? '👆 <b>Touche le soldat visible</b> du déguisement pour le comparer à l\'armée.' : 'On compare d\'abord les soldats visibles avec l\'armée.');
+      say('🔗', ia ? '👆 <b>Touche le soldat visible</b> pour le comparer au calcul d\'en haut.' : 'On compare d\'abord le soldat visible avec celui d\'en haut.');
       await run(vis, async (s) => {
         const t = twin(s);
         bubble(s, 'Pas d\'ordre : il garde sa veste → comme en haut ✓', 'p');
@@ -578,7 +579,7 @@
       exprEl.innerHTML = '<span class="e0">' + GR.flatStr(flat) + ' = ' + GR.str(node) + '</span>';
       await wait(400);
     }
-    // Vérification : on exécute les ordres et on retrouve la même armée
+    // Vérification : on exécute l'ordre et on retrouve le calcul de départ
     async function revCheck() {
       const tg = hc.badge || hc.sel;
       say('✅', ia ? '👆 <b>Vérifions : touche l\'ordre</b> pour l\'exécuter.' : 'Vérifions : on exécute l\'ordre.');
@@ -589,8 +590,8 @@
       flipLayout(sols, () => { line.innerHTML = ''; sols.forEach((s, i) => { s._explicit = i > 0 || s._s === '-'; setLabel(s); line.appendChild(s); }); }, 550);
       await wait(650);
       sols.forEach((s, i) => { s.classList.add('glow'); twin(s).classList.add('glow'); setTimeout(() => sparkle(s, 8, 'gold'), i * 150); });
-      say('🎉', 'Après l\'ordre, on retrouve <b>la même armée</b> qu\'en haut : <b>' + GR.flatStr(flat) + '</b>. Le déguisement est juste !');
-      exprEl.insertAdjacentHTML('beforeend', ' <span class="res g">✓ même armée</span>');
+      say('🎉', 'L\'ordre exécuté, on retrouve bien <b>' + GR.flatStr(flat) + '</b> : le soldat caché était le bon.');
+      exprEl.insertAdjacentHTML('beforeend', ' <span class="e1">= ' + GR.flatStr(flat) + '</span> <span class="res g">✓</span>');
       if (GR.sfx) GR.sfx('star');
       await wait(900);
       sols.forEach((s) => { s.classList.remove('glow'); twin(s).classList.remove('glow'); });
@@ -600,7 +601,7 @@
     if (opts.reverse) {
       flat = GR.flatten(node);
       api.stages.push({ id: 'lineup', label: '🕵️ L\'armée et son déguisement', run: revLineup });
-      api.stages.push({ id: 'match', label: '🔗 Le soldat visible', run: revMatch });
+      if (!opts.light) api.stages.push({ id: 'match', label: '🔗 Le soldat visible', run: revMatch });
       if (opts.hideOrder) {
         api.stages.push({ id: 'compare', label: '👀 Bonne veste ou pas ?', run: revCompare });
         if (opts.showResult) api.stages.push({ id: 'reveal', label: '📣 L\'ordre', run: revRevealOrder });

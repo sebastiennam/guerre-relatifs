@@ -234,13 +234,13 @@
     if (expr === undefined) for (let k = i; k >= 0; k--) if (slides[k].expr !== undefined) { expr = slides[k].expr; break; }
     T.player = null;
     if (expr) {
-      T.player = GR.Player(demo, expr, { mode: 'interactive', until: s.until || null, showResult: true, reverse: !!s.rev, hideOrder: !!s.hideOrder, onRestart: (p) => { modalPlayers.push(p); if (T) T.player = p; } });
+      T.player = GR.Player(demo, expr, { mode: 'interactive', light: true, until: s.until || null, showResult: true, reverse: !!s.rev, hideOrder: !!s.hideOrder, onRestart: (p) => { modalPlayers.push(p); if (T) T.player = p; } });
       modalPlayers.push(T.player);
     } else demo.innerHTML = s.html || '';
     const slideT = T;
-    const readMs = GR.readTime(s.t + ' ' + s.d + ' ' + (s.html || ''), 3500, 12000);
-    lockBtn($('tuto-next'), readMs, () => !slideT.player || slideT.player.isDone(), (why) => {
-      $('tuto-wait').textContent = why === 'time' ? '📖 Prends le temps de lire…' : why === 'cond' ? '🎬 Termine l’animation : touche les éléments qui brillent (ou « Montre-moi »).' : '';
+    // Pas de minuterie : « Suivant » s'active dès que l'animation de la diapositive est terminée
+    lockBtn($('tuto-next'), 0, () => !slideT.player || slideT.player.isDone(), (why) => {
+      $('tuto-wait').textContent = why ? '👆 Touche les éléments qui brillent (ou « Montre-moi »).' : '';
     });
     $('tuto-prev').disabled = i === 0;
     $('tuto-next').textContent = i === slides.length - 1 ? (T.onDone ? '⚔️ C\'est parti !' : '✓ J\'ai compris') : 'Suivant ▶';
@@ -575,7 +575,6 @@
     n.onclick = () => { if (!n.disabled) nextQuestion(); };
     act.appendChild(n);
     S.nextBtn = n;
-    lockBtn(n, GR.readTime($('q-fb').innerText, ok ? 1800 : 3500, 8000));
   }
 
   function endSeries() {
