@@ -24,6 +24,7 @@
   </div>
 </header>
 
+<div class="testbar hidden" id="testbar">🧪 <b>Mode test</b> : tout est débloqué, rien n'est enregistré. <button class="btn sm" id="test-off">Quitter le mode test</button></div>
 <main>
   <!-- CAMPAGNE -->
   <section id="home">
@@ -31,11 +32,12 @@
       <div>
         <h1>Ta campagne</h1>
         <p class="lead">Réussis le <b>niveau 2</b> d'une mission (7/10) pour débloquer la suivante. Le niveau 3 est un défi bonus pour gagner des étoiles.</p>
+        <div class="pl-stage hero-scene" id="hero-scene"></div>
       </div>
       <div class="rank" id="rank"></div>
     </div>
     <div class="road" id="road"></div>
-    <p class="foot">Professeur : <a href="fiche.html">fiche imprimable</a> · <a href="guide-prof.html">guide enseignant</a></p>
+    <p class="foot">Professeur : <a href="fiche.html">fiche imprimable</a> · <a href="guide-prof.html">guide enseignant</a> · <a href="index.html?test=1">🧪 mode test</a></p>
   </section>
 
   <!-- EXERCICE -->
@@ -115,7 +117,9 @@
         <div>
           <h3>Chaque nombre est un soldat</h3>
           <p>Son signe est la couleur de sa veste : <b class="tg">positif = veste verte</b>, <b class="tr">négatif = veste rouge</b>. Le nombre sans son signe, c'est sa <b>force</b>.</p>
+          <p><b>Un nombre écrit sans signe est positif</b> : dans 6 + 4, le 6 est un +6 (le « + » est sous-entendu, on ne l'écrit pas en début de calcul). Le « + » entre les deux appartient au 4.</p>
           <div id="memo-sold"></div>
+          <div class="ex-chips" style="margin-top:10px" data-ex="6+4|6-4"></div>
         </div>
       </div>
       <div class="card rule">

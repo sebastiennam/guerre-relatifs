@@ -11,15 +11,32 @@
   const CANCEL = { cancel: true };
   const h = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
 
-  const SVG = '<svg class="sd-svg" viewBox="0 0 64 86" aria-hidden="true">' +
-    '<ellipse class="sd-shadow" cx="32" cy="83" rx="21" ry="3"/>' +
-    '<path class="sd-veste" d="M9 50 Q10 36 23 33 L41 33 Q54 36 55 50 L57 80 L7 80 Z"/>' +
-    '<path class="sd-col" d="M25 33 L32 43 L39 33 Z"/>' +
-    '<path class="sd-arm" d="M9 50 L5 70 L11 71 L14 54 Z"/><path class="sd-arm" d="M55 50 L59 70 L53 71 L50 54 Z"/>' +
-    '<circle class="sd-face" cx="32" cy="22" r="11"/>' +
-    '<path class="sd-helm" d="M18.5 21 Q18.5 6.5 32 6.5 Q45.5 6.5 45.5 21 L49 22.5 L15 22.5 Z"/>' +
-    '<circle class="sd-eye" cx="28" cy="25" r="1.5"/><circle class="sd-eye" cx="36" cy="25" r="1.5"/>' +
-    '<path class="sd-mouth" d="M29 29 Q32 31 35 29"/></svg>';
+  // Soldat illustré : bottes, pantalon, veste (couleur = signe), ceinturon, casque…
+  // Les éléments .sd-star / .sd-ep n'apparaissent que pour un général (taille « big »).
+  const SVG = '<svg class="sd-svg" viewBox="0 0 64 96" aria-hidden="true">' +
+    '<ellipse class="sd-shadow" cx="32" cy="93" rx="19" ry="3.2"/>' +
+    '<path class="sd-pants" d="M20 72 L21 87 L30.5 87 L31 72 Z M33 72 L33.5 87 L43 87 L44 72 Z"/>' +
+    '<path class="sd-boot" d="M19.5 85.5 H31 V91 H17.5 Q17.5 87.5 19.5 85.5 Z M33 85.5 H44.5 Q46.5 87.5 46.5 91 H33 Z"/>' +
+    '<path class="sd-sleeve" d="M14 45 Q7 50 7.5 66 L13.5 67 Q14 55 18.5 50 Z"/><path class="sd-sleeve" d="M50 45 Q57 50 56.5 66 L50.5 67 Q50 55 45.5 50 Z"/>' +
+    '<circle class="sd-skin" cx="10.5" cy="68.5" r="3.7"/><circle class="sd-skin" cx="53.5" cy="68.5" r="3.7"/>' +
+    '<path class="sd-veste" d="M14 47 Q15 36.5 25 34.5 L39 34.5 Q49 36.5 50 47 L51 75 L13 75 Z"/>' +
+    '<path class="sd-shade" d="M37 34.5 L39 34.5 Q49 36.5 50 47 L51 75 L41 75 Z"/>' +
+    '<path class="sd-pocket" d="M17 50 H25 M39 50 H47"/>' +
+    '<rect class="sd-belt" x="13" y="64.5" width="38" height="5" rx="1.2"/><rect class="sd-buckle" x="29" y="63.8" width="6" height="6.4" rx="1.2"/>' +
+    '<rect class="sd-ep" x="13.5" y="38" width="9" height="3.2" rx="1.6"/><rect class="sd-ep" x="41.5" y="38" width="9" height="3.2" rx="1.6"/>' +
+    '<path class="sd-col" d="M25 34.5 L32 43 L39 34.5 Z"/>' +
+    '<circle class="sd-skin" cx="21" cy="24.5" r="2.6"/><circle class="sd-skin" cx="43" cy="24.5" r="2.6"/>' +
+    '<circle class="sd-skin" cx="32" cy="23.5" r="11"/>' +
+    '<circle class="sd-cheek" cx="25.6" cy="28.6" r="1.9"/><circle class="sd-cheek" cx="38.4" cy="28.6" r="1.9"/>' +
+    '<path class="sd-brow" d="M25.5 21.3 L29.8 20.7 M34.2 20.7 L38.5 21.3"/>' +
+    '<circle class="sd-eye" cx="28" cy="24.8" r="1.6"/><circle class="sd-eye" cx="36" cy="24.8" r="1.6"/>' +
+    '<path class="sd-mouth" d="M29 30 Q32 32.6 35 30"/>' +
+    '<path class="sd-strap" d="M21.6 22.5 Q23 33.5 32 34.5 Q41 33.5 42.4 22.5"/>' +
+    '<path class="sd-helm" d="M19 22.5 Q19 8 32 8 Q45 8 45 22.5 Z"/>' +
+    '<path class="sd-rim" d="M15.5 22.3 Q32 18.8 48.5 22.3 L48.5 24.4 Q32 21 15.5 24.4 Z"/>' +
+    '<path class="sd-hl" d="M23.5 13.5 Q27.5 9.8 33 9.6"/>' +
+    '<path class="sd-star" d="M32 10.6 l1.9 3.8 4.2 .6 -3 2.9 .7 4.2 -3.8 -2 -3.8 2 .7 -4.2 -3 -2.9 4.2 -.6 Z"/>' +
+    '</svg>';
 
   function makeSoldier(s, v, explicit, size) {
     const el = h('div', 'sd ' + (s === '-' ? 'r' : s === '0' ? 'z' : 'g') + (size ? ' ' + size : ''));
@@ -28,40 +45,69 @@
     setLabel(el);
     return el;
   }
+  // Un nombre sans signe écrit est positif : on affiche son « + » en fantôme
   function setLabel(el, txt) {
-    let t = txt;
-    if (t == null) t = el._hidden ? '?' : (el._s === '-' ? M : el._explicit ? '+' : '') + GR.fmtAbs(el._v);
-    el.querySelector('.sd-num').textContent = t;
+    const num = el.querySelector('.sd-num');
+    num.classList.toggle('hid', !!el._hidden && txt == null);
+    if (txt != null) { num.textContent = txt; return; }
+    if (el._hidden) { num.textContent = '?'; return; }
+    if (el._s === '-') num.textContent = M + GR.fmtAbs(el._v);
+    else if (el._s === '0') num.textContent = '0';
+    else if (el._explicit) num.textContent = '+' + GR.fmtAbs(el._v);
+    else num.innerHTML = '<span class="gp">+</span>' + GR.fmtAbs(el._v);
   }
   function setSign(el, s) { el._s = s; el.classList.remove('g', 'r', 'z'); el.classList.add(s === '-' ? 'r' : 'g'); }
   GR.soldier = (s, v, explicit, small) => makeSoldier(s, v, explicit, small ? 'sm' : '');
   GR.mascot = () => { const m = makeSoldier('0', 0, false, 'sm'); setLabel(m, '0'); return m; };
 
+  // Petite gerbe d'étincelles autour d'un élément
+  function sparkle(el, n, cls) {
+    const host = el.closest('.pl-stage') || el.parentElement;
+    if (!host) return;
+    const hr = host.getBoundingClientRect(), r = el.getBoundingClientRect();
+    const cx = r.left - hr.left + r.width / 2, cy = r.top - hr.top + r.height * 0.45;
+    for (let i = 0; i < (n || 8); i++) {
+      const sp = h('i', 'spark ' + (cls || ''));
+      sp.style.left = cx + 'px'; sp.style.top = cy + 'px';
+      host.appendChild(sp);
+      const a = (Math.PI * 2 * i) / (n || 8) + Math.random() * 0.5;
+      const d = 26 + Math.random() * 30;
+      sp.animate([{ transform: 'translate(-50%,-50%) scale(1)', opacity: 1 }, { transform: 'translate(calc(-50% + ' + Math.cos(a) * d + 'px), calc(-50% + ' + Math.sin(a) * d + 'px)) scale(.2)', opacity: 0 }], { duration: 520 + Math.random() * 260, easing: 'cubic-bezier(.2,.8,.3,1)' }).onfinish = () => sp.remove();
+    }
+  }
+  GR.sparkle = sparkle;
+
   function flipSoldier(el, s) {
     const inner = el.querySelector('.sd-in');
     if (GR.sfx) GR.sfx('flip');
     return new Promise((res) => {
-      const a = inner.animate([{ transform: 'rotateY(0deg)' }, { transform: 'rotateY(90deg)' }], { duration: 170, easing: 'ease-in', fill: 'forwards' });
+      const a = inner.animate([{ transform: 'rotateY(0deg) scale(1)' }, { transform: 'rotateY(90deg) scale(1.08)' }], { duration: 170, easing: 'ease-in', fill: 'forwards' });
       a.onfinish = () => {
         setSign(el, s || (el._s === '-' ? '+' : '-'));
         el._explicit = true; setLabel(el);
-        const b = inner.animate([{ transform: 'rotateY(-90deg)' }, { transform: 'rotateY(0deg)' }], { duration: 210, easing: 'ease-out' });
+        sparkle(el, 8, el._s === '-' ? 'r' : 'g');
+        const b = inner.animate([{ transform: 'rotateY(-90deg) scale(1.08)' }, { transform: 'rotateY(0deg) scale(1)' }], { duration: 230, easing: 'ease-out' });
         a.cancel();
         b.onfinish = res;
       };
     });
   }
 
-  // Déplacement fluide d'éléments d'un endroit de la page à un autre (technique FLIP)
-  function flipLayout(els, mutate, ms) {
+  // Déplacement fluide d'éléments d'un endroit de la page à un autre (technique FLIP), avec un petit saut
+  function flipLayout(els, mutate, ms, hop) {
     const first = els.map((e) => e.getBoundingClientRect());
     mutate();
     els.forEach((e, i) => {
       const l = e.getBoundingClientRect(), f = first[i];
       const dx = f.left - l.left, dy = f.top - l.top;
-      if (dx || dy) e.animate([{ transform: 'translate(' + dx + 'px,' + dy + 'px)' }, { transform: 'none' }], { duration: ms, easing: 'cubic-bezier(.2,.8,.2,1)' });
+      if (!dx && !dy) return;
+      const frames = hop
+        ? [{ transform: 'translate(' + dx + 'px,' + dy + 'px)' }, { transform: 'translate(' + dx / 2 + 'px,' + (dy / 2 - 34) + 'px) rotate(' + (dx > 0 ? -8 : 8) + 'deg)', offset: 0.5 }, { transform: 'none' }]
+        : [{ transform: 'translate(' + dx + 'px,' + dy + 'px)' }, { transform: 'none' }];
+      e.animate(frames, { duration: ms, easing: hop ? 'ease-in-out' : 'cubic-bezier(.2,.8,.2,1)' });
     });
   }
+  const FLAG = (c) => '<div class="flag ' + c + '"><svg viewBox="0 0 44 54" aria-hidden="true"><rect x="5" y="2" width="3.2" height="50" rx="1.6" class="pole"/><circle cx="6.6" cy="3" r="3" class="knob"/><path class="cloth" d="M8 5 Q21 1 38 7 Q24 13 38 19 Q22 23 8 19 Z"/></svg><span>' + (c === 'g' ? 'Camp vert (+)' : 'Camp rouge (' + M + ')') + '</span></div>';
 
   // Construit la rangée de soldats d'un calcul
   function build(node, parent, size) {
@@ -214,12 +260,33 @@
         s.animate([{ transform: 'translateY(24px) scale(.5)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 420, delay: i * 80, easing: 'cubic-bezier(.2,.9,.3,1.3)', fill: 'backwards' });
         if (opts.mode !== 'static') s.addEventListener('click', () => {
           if (s.classList.contains('tap') || s.closest('.camp')) return;
-          bubble(s, (s._s === '-' ? 'Veste rouge' : 'Veste verte') + ' · force ' + GR.fmtAbs(s._v), s._s === '-' ? 'r' : 'g');
+          if (s._s === '+' && !s._explicit) bubble(s, 'Pas de signe écrit → positif : +' + GR.fmtAbs(s._v), 'g');
+          else bubble(s, (s._s === '-' ? 'Veste rouge' : 'Veste verte') + ' · force ' + GR.fmtAbs(s._v), s._s === '-' ? 'r' : 'g');
         });
       });
-      if (node.hasProd) say('🧮', 'Attention, c\'est un <b>produit</b> (×) : ce n\'est pas une bataille !');
-      else if (node.hasGroup) say('📣', 'Un signe collé à un nombre est la <b>couleur de sa veste</b>. Les parenthèses <b>sélectionnent</b> des soldats ; le signe juste devant est un <b>ordre</b>.' + (opts.mode !== 'static' ? ' <i>Touche un soldat pour voir sa force.</i>' : ''));
-      else say('🪖', 'Chaque nombre est un soldat : son signe est la <b>couleur de sa veste</b>, le nombre sans signe est sa <b>force</b>. Pas de parenthèse, pas d\'ordre.');
+      const implicit = reg.soldiers.find((s) => s._s === '+' && !s._explicit);
+      const imp = implicit ? '<span class="implicit">✳️ Le <b>' + GR.fmtAbs(implicit._v) + '</b> n\'a pas de signe écrit : un nombre <b>sans signe est positif</b>. Son « + » est sous-entendu (on le voit en transparent sur sa veste).</span>' : '';
+      const tip = opts.mode !== 'static' ? ' <i>Touche un soldat pour voir sa force.</i>' : '';
+      if (node.hasProd) say('🧮', 'Attention, c\'est un <b>produit</b> (×) : ce n\'est pas une bataille !' + imp);
+      else if (node.hasGroup) say('📣', 'Un signe collé à un nombre est la <b>couleur de sa veste</b>. Les parenthèses <b>sélectionnent</b> des soldats ; le signe juste devant est un <b>ordre</b>.' + tip + imp);
+      else say('🪖', 'Chaque nombre est un soldat : son signe est la <b>couleur de sa veste</b>, le nombre sans signe est sa <b>force</b>. Pas de parenthèse, pas d\'ordre.' + tip + imp);
+    }
+
+    // Le signe sous-entendu : un nombre sans signe écrit est positif
+    async function implicitStage() {
+      const t = reg.soldiers.filter((s) => s._s === '+' && !s._explicit);
+      if (!t.length) return;
+      const v = GR.fmtAbs(t[0]._v);
+      say('✳️', ia ? '👆 <b>Touche le ' + v + '</b> : pourquoi n\'a-t-il pas de signe ?' : 'Le ' + v + ' n\'a pas de signe écrit… regardons sa veste.');
+      await run(t, async (s) => {
+        bubble(s, 'Pas de signe écrit → positif : +' + GR.fmtAbs(s._v), 'g');
+        const gp = s.querySelector('.gp');
+        if (gp) gp.animate([{ opacity: 0.32, transform: 'scale(1)' }, { opacity: 1, transform: 'scale(1.7)', offset: 0.25 }, { opacity: 1, transform: 'scale(1)', offset: 0.7 }, { opacity: 0.32, transform: 'scale(1)' }], { duration: 1700 });
+        sparkle(s, 8, 'g');
+        await wait(1300);
+      }, 300);
+      say('✳️', 'Un nombre <b>sans signe écrit est positif</b> : sa veste est verte, son « + » est sous-entendu (on ne l\'écrit pas en début de calcul).' + (reg.soldiers.length > 1 ? ' Chaque signe écrit appartient au soldat qui le suit.' : ''));
+      await wait(ia ? 1200 : 1500);
     }
 
     async function execCmd(c) {
@@ -251,15 +318,17 @@
       say('🏳️', ia ? '👆 <b>Touche chaque soldat</b> pour l\'envoyer dans son camp : les verts d\'un côté, les rouges de l\'autre.' : 'On range les soldats : les <b>verts</b> d\'un côté, les <b>rouges</b> de l\'autre.');
       field.innerHTML = '';
       camps.g = h('div', 'camp g'); camps.r = h('div', 'camp r');
+      const wg = h('div', 'campw', FLAG('g')), wr = h('div', 'campw', FLAG('r'));
+      wg.appendChild(camps.g); wr.appendChild(camps.r);
       const vs = h('button', 'vs', 'VS'); vs.type = 'button'; vs.disabled = true;
       camps.vs = vs;
-      field.append(camps.g, vs, camps.r);
+      field.append(wg, vs, wr);
       field.classList.add('on');
       const sols = reg.soldiers.slice();
       await run(sols, async (s) => {
-        flipLayout([s], () => { (s._s === '+' ? camps.g : camps.r).appendChild(s); }, 520);
-        await wait(420);
-      }, 120);
+        flipLayout([s], () => { (s._s === '+' ? camps.g : camps.r).appendChild(s); }, 640, true);
+        await wait(560);
+      }, 100);
       line.classList.add('off');
       ['g', 'r'].forEach((k) => { if (!camps[k].children.length) camps[k].appendChild(h('div', 'nobody', 'personne')); });
       await wait(250);
@@ -282,7 +351,10 @@
       camp.classList.remove('tap');
       camp.innerHTML = ''; camp.appendChild(gen);
       gen.classList.add('hp-on');
-      gen.animate([{ transform: 'scale(.55)' }, { transform: 'scale(1.1)' }, { transform: 'none' }], { duration: 450, easing: 'ease-out' });
+      gen.animate([{ transform: 'scale(.55)' }, { transform: 'scale(1.12)' }, { transform: 'none' }], { duration: 480, easing: 'ease-out' });
+      const ring = h('i', 'ring ' + k); camp.appendChild(ring);
+      ring.animate([{ transform: 'translate(-50%,-50%) scale(.3)', opacity: 0.9 }, { transform: 'translate(-50%,-50%) scale(1.6)', opacity: 0 }], { duration: 700, easing: 'ease-out' }).onfinish = () => ring.remove();
+      setTimeout(() => sparkle(gen, 10, 'gold'), 120);
       setHP(gen, tot);
       gens[k] = gen;
       if (hideTot) { gen._hidden = true; gen._v = tot; setLabel(gen); }
@@ -317,6 +389,8 @@
       const ra = r.animate([{ transform: 'none' }, { transform: 'translateX(-34px)' }], { duration: 360, easing: 'ease-in', fill: 'forwards' });
       await wait(360);
       boom();
+      sparkle(camps.vs, 18, 'gold');
+      stage.animate([{ transform: 'translate(0,0)' }, { transform: 'translate(-6px,3px)' }, { transform: 'translate(5px,-3px)' }, { transform: 'translate(-3px,2px)' }, { transform: 'translate(0,0)' }], { duration: 380 });
       if (GR.sfx) GR.sfx('boom');
       [g, r].forEach((x) => x.querySelector('.sd-in').animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-5px)' }, { transform: 'translateX(5px)' }, { transform: 'translateX(0)' }], { duration: 160, iterations: 3 }));
       const gl = GR.round(b.G - k), rl = GR.round(b.R - k);
@@ -379,6 +453,8 @@
 
     /* ---------- liste des étapes ---------- */
     api.stages.push({ id: 'lineup', label: '🪖 Les soldats', run: lineup });
+    const hasImplicit = (function walk(items) { return items.some((n, i) => (n.kind === 'num' && i === 0 && !n.explicit && n.s === '+') || (n.kind === 'group' && walk(n.items)) || (n.kind === 'prod' && i === 0 && !n.explicit)); })(node.items);
+    if (hasImplicit && (opts.mode === 'interactive' || opts.mode === 'auto')) api.stages.push({ id: 'implicit', label: '✳️ Le signe sous-entendu', run: implicitStage });
     if (node.hasProd) {
       if (node.items.length === 1 && node.items[0].kind === 'prod') api.stages.push({ id: 'product', label: '✖️ Le produit', run: product });
     } else {

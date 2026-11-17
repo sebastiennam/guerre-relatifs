@@ -12,7 +12,7 @@
 
   /* ================= PROGRESSION ================= */
   const KEY = 'gr-v2';
-  const fresh = () => ({ best: {}, xp: 0, tuto: {}, all: false, sound: false });
+  const fresh = () => ({ best: {}, xp: 0, tuto: {}, all: false, sound: false, test: false });
   function load() {
     try { const x = JSON.parse(localStorage.getItem(KEY) || 'null'); if (x && typeof x === 'object') return Object.assign(fresh(), x); } catch (e) { /* indisponible */ }
     return fresh();
@@ -22,13 +22,18 @@
   const qs = new URLSearchParams(location.search);
   if (qs.get('reset') === '1') { P = fresh(); save(); }
   if (qs.get('prof') === '1') { P.all = true; save(); }
-  if (qs.has('prof') || qs.has('reset')) history.replaceState(null, '', location.pathname);
+  if (qs.get('test') === '1') { P.test = true; save(); }
+  if (qs.get('test') === '0') { P.test = false; save(); }
+  if (qs.has('prof') || qs.has('reset') || qs.has('test')) history.replaceState(null, '', location.pathname);
 
+  const sessionTuto = {};
+  const tutoSeen = (mid) => (P.test ? sessionTuto[mid] : P.tuto[mid]);
+  const markTuto = (mid) => { if (P.test) sessionTuto[mid] = true; else { P.tuto[mid] = true; save(); } };
   const best = (m, l) => P.best[m + '-' + l] || 0;
   const starsOf = (sc) => (sc >= 10 ? 3 : sc >= 8 ? 2 : sc >= PASS ? 1 : 0);
   const midx = (id) => MISS.findIndex((m) => m.id === id);
   function unlocked(mi, l) {
-    if (P.all) return true;
+    if (P.all || P.test) return true;
     if (l === 1) return mi === 0 || best(MISS[mi - 1].id, 2) >= PASS;
     return unlocked(mi, 1) && best(MISS[mi].id, l - 1) >= PASS;
   }
@@ -108,11 +113,30 @@
   }
   document.addEventListener('click', (e) => { const g = e.target.closest('[data-go]'); if (g) { closeAllModals(); show(g.dataset.go); } });
 
+  const LOOK = {
+    bataille: ['⚔️', '#f97316'], ordres: ['📣', '#8b5cf6'], fideles: ['🎭', '#ec4899'], longues: ['🛡️', '#22c55e'],
+    deguise: ['🕵️', '#06b6d4'], manoeuvres: ['🗺️', '#eab308'], groupe: ['👥', '#a855f7'], contre: ['🔍', '#ef4444'],
+  };
+  function testBar() { $('testbar').classList.toggle('hidden', !P.test); }
+  $('test-off').onclick = () => { P.test = false; save(); testBar(); show('home'); toast('Mode test désactivé.'); };
+  testBar();
+
   /* ================= CAMPAGNE ================= */
   function renderHome() {
     const R = rank();
     const pct = R.next ? ((R.t - R.r[0]) / (R.next[0] - R.r[0])) * 100 : 100;
     $('rank').innerHTML = '<div class="rk-ico">' + R.r[2] + '</div><div><div class="rk-n">' + R.r[1] + '</div><div class="rk-s">⭐ ' + R.t + ' / ' + MAXSTARS + ' · ' + P.xp + ' XP</div><div class="bar"><i style="width:' + pct + '%"></i></div><div class="rk-next">' + (R.next ? 'Prochain grade : ' + R.next[1] + ' (' + R.next[0] + ' ⭐)' : 'Grade maximum !') + '</div></div>';
+    const sc = $('hero-scene');
+    if (!sc.dataset.ok) {
+      sc.dataset.ok = '1';
+      const line = document.createElement('div');
+      line.className = 'pl-line';
+      [['+', 5], ['+', 3], ['+', 7]].forEach(([s, v], i) => { const e = GR.soldier(s, v, true, true); e.style.animationDelay = i * 0.3 + 's'; line.appendChild(e); });
+      const vs = document.createElement('div'); vs.className = 'vs'; vs.textContent = 'VS'; line.appendChild(vs);
+      [['-', 4], ['-', 6], ['-', 2]].forEach(([s, v], i) => { const e = GR.soldier(s, v, true, true); e.style.animationDelay = 0.15 + i * 0.3 + 's'; line.appendChild(e); });
+      sc.appendChild(line);
+    }
+    if (P.test) $('rank').innerHTML = '<div class="rk-ico">🧪</div><div><div class="rk-n">Mode test</div><div class="rk-next">Tout est débloqué, rien n’est enregistré.</div></div>';
     const road = $('road');
     road.innerHTML = '';
     MISS.forEach((m, mi) => {
@@ -123,7 +147,8 @@
       const stop = h('div', 'stop ' + (mi % 2 ? 'right' : 'left') + ' ' + state);
       stop.appendChild(h('div', 'node', state === 'locked' ? '🔒' : state === 'done' ? '✓' : String(m.n)));
       const card = h('button', 'mcard');
-      card.innerHTML = '<div class="mc-top"><span class="mc-n">Mission ' + m.n + '</span><span class="mc-st">★ ' + st + ' / 9</span></div><h3>' + m.titre + '</h3><p>' + m.desc + '</p><div class="mc-demo"></div>' +
+      card.style.setProperty('--acc', LOOK[m.id][1]);
+      card.innerHTML = '<div class="mc-top"><span class="mc-ico">' + LOOK[m.id][0] + '</span><span class="mc-n">Mission ' + m.n + '</span><span class="mc-st">★ ' + st + ' / 9</span></div><h3>' + m.titre + '</h3><p>' + m.desc + '</p><div class="mc-demo"></div>' +
         (state === 'locked' ? '<div class="mc-lock">🔒 Réussis le niveau 2 de la mission ' + (mi) + ' pour l\'ouvrir</div>' : '');
       GR.lineupOnly(card.querySelector('.mc-demo'), GR.DEMOS[m.id], 'sm');
       card.onclick = () => { if (open) openSheet(mi); else { toast('🔒 Mission verrouillée : réussis d\'abord le niveau 2 de la mission ' + mi + '.'); card.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-6px)' }, { transform: 'translateX(6px)' }, { transform: 'translateX(0)' }], { duration: 300 }); } };
@@ -139,7 +164,8 @@
   function openSheet(mi) {
     const m = MISS[mi];
     const box = $('sheet-box');
-    box.innerHTML = '<div class="mhead"><div><div class="kicker">Mission ' + m.n + '</div><h2>' + m.titre + '</h2></div><button class="icon-btn" id="sheet-x" aria-label="Fermer">✕</button></div><p class="lead">' + m.desc + '</p><div id="sheet-demo" style="margin-top:12px"></div><div class="actions"><button class="btn violet" id="sheet-tuto">📖 Tutoriel animé</button></div><div class="lvls" id="sheet-lvls"></div><p class="note">🔓 Il faut <b>7/10</b> pour réussir un niveau. Réussir le <b>niveau 2</b> débloque la mission suivante ; le niveau 3 est un défi bonus.</p>';
+    box.style.setProperty('--acc', LOOK[m.id][1]);
+    box.innerHTML = '<div class="mhead"><div class="sh-t"><span class="mc-ico big">' + LOOK[m.id][0] + '</span><div><div class="kicker">Mission ' + m.n + '</div><h2>' + m.titre + '</h2></div></div><button class="icon-btn" id="sheet-x" aria-label="Fermer">✕</button></div><p class="lead">' + m.desc + '</p><div id="sheet-demo" style="margin-top:12px"></div><div class="actions"><button class="btn violet" id="sheet-tuto">📖 Tutoriel animé</button></div><div class="lvls" id="sheet-lvls"></div><p class="note">🔓 Il faut <b>7/10</b> pour réussir un niveau. Réussir le <b>niveau 2</b> débloque la mission suivante ; le niveau 3 est un défi bonus.</p>';
     $('sheet').classList.remove('hidden');
     killModalPlayers();
     modalPlayers.push(GR.Player($('sheet-demo'), GR.DEMOS[m.id], { mode: 'auto', showResult: true, onRestart: (p) => modalPlayers.push(p) }));
@@ -159,7 +185,7 @@
     });
   }
   function startLevel(mid, l) {
-    if (l === 1 && !P.tuto[mid]) openTuto(mid, () => startSeries(mid, 1));
+    if (l === 1 && !tutoSeen(mid)) openTuto(mid, () => startSeries(mid, 1));
     else startSeries(mid, l);
   }
 
@@ -190,13 +216,13 @@
   }
   $('tuto-next').onclick = () => {
     if (T.i < T.slides.length - 1) { T.i++; renderTuto(); return; }
-    P.tuto[T.mid] = true; save();
+    markTuto(T.mid);
     const cb = T.onDone;
     closeAllModals(); T = null;
     if (cb) cb();
   };
   $('tuto-prev').onclick = () => { if (T.i > 0) { T.i--; renderTuto(); } };
-  $('tuto-x').onclick = () => { if (T) { P.tuto[T.mid] = true; save(); } closeAllModals(); T = null; };
+  $('tuto-x').onclick = () => { if (T) { markTuto(T.mid); } closeAllModals(); T = null; };
 
   /* ================= BATAILLE EN FENÊTRE ================= */
   function openBattle(expr, title) {
@@ -206,8 +232,8 @@
     modalPlayers.push(GR.Player($('modal-body'), expr, { mode: 'interactive', showResult: true, onRestart: (p) => modalPlayers.push(p) }));
   }
   $('modal-x').onclick = closeAllModals;
-  ['modal', 'sheet', 'tuto'].forEach((id) => $(id).addEventListener('click', (e) => { if (e.target.id === id) { if (id === 'tuto' && T) { P.tuto[T.mid] = true; save(); T = null; } closeAllModals(); } }));
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { if (T) { P.tuto[T.mid] = true; save(); T = null; } closeAllModals(); } });
+  ['modal', 'sheet', 'tuto'].forEach((id) => $(id).addEventListener('click', (e) => { if (e.target.id === id) { if (id === 'tuto' && T) { markTuto(T.mid); T = null; } closeAllModals(); } }));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { if (T) { markTuto(T.mid); T = null; } closeAllModals(); } });
 
   /* ================= PAVÉ ================= */
   function buildPad(el, keys, getTarget, onOk) {
@@ -240,7 +266,8 @@
   function startSeries(mid, l) {
     Object.assign(S, { mission: mid, level: l, i: 0, score: 0, recent: [], res: [], streak: 0, xpGain: 0, before: snapshot() });
     const m = MISS[midx(mid)];
-    $('ex-title').textContent = 'Mission ' + m.n + ' · ' + m.titre;
+    $('ex-title').textContent = LOOK[mid][0] + ' Mission ' + m.n + ' · ' + m.titre;
+    $('qcard').style.setProperty('--acc', LOOK[mid][1]);
     $('ex-level').textContent = ['Niveau 1 · guidé et animé', 'Niveau 2 · sans aide', 'Niveau 3 · défi bonus'][l - 1];
     show('ex');
     nextQuestion();
@@ -472,7 +499,7 @@
     S.res[S.i - 1] = ok ? 'ok' : S.gotRight ? 'mid' : 'ko';
     if (ok) { S.score++; S.streak++; } else S.streak = 0;
     const gain = ok ? 10 + Math.min(S.streak - 1, 5) * 2 : S.gotRight ? 4 : 0;
-    if (gain) { P.xp += gain; S.xpGain += gain; save(); xpFly('+' + gain + ' XP'); }
+    if (gain) { if (!P.test) P.xp += gain; S.xpGain += gain; save(); xpFly('+' + gain + ' XP'); }
     if (ok) { GR.sfx('ok'); confetti(26); if (S.streak >= 2) { const st = $('streak'); st.classList.remove('bump'); void st.offsetWidth; st.classList.add('bump'); } }
     renderPips();
 
@@ -500,7 +527,7 @@
   function endSeries() {
     const sc = S.score;
     const k = S.mission + '-' + S.level;
-    if (sc > (P.best[k] || 0)) P.best[k] = sc;
+    if (!P.test && sc > (P.best[k] || 0)) P.best[k] = sc;
     save();
     const mi = midx(S.mission);
     const m = MISS[mi];

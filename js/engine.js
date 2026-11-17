@@ -320,6 +320,12 @@
     }
     const groups = [];
     (function walk(items) { items.forEach((n) => { if (n.kind === 'group') { groups.push(n); walk(n.items); } }); })(node.items);
+    const imp = [];
+    (function walk(items) { items.forEach((n, i) => { if (n.kind === 'num' && i === 0 && !n.explicit) imp.push(n); if (n.kind === 'group') walk(n.items); }); })(node.items);
+    if (imp.length) {
+      const v = imp.map((n) => fmtAbs(n.v));
+      H.push({ t: 'Et le nombre sans signe ?', d: (v.length > 1 ? 'Les nombres ' + v.join(' et ') + ' n\'ont' : 'Le ' + v[0] + ' n\'a') + ' pas de signe écrit : un nombre <b>sans signe est positif</b>, sa veste est verte. Le « + » est sous-entendu : ' + v[0] + ' = +' + v[0] + '. Le signe qui suit appartient au soldat suivant.' });
+    }
     if (groups.length) {
       H.push({ t: 'Étape 1 — Exécuter les ordres', d: 'Il y a ' + groups.length + ' parenthèse' + (groups.length > 1 ? 's' : '') + '. Une parenthèse sélectionne des soldats ; le signe juste devant est l\'ordre qu\'on leur donne.' });
       groups.forEach((g) => {
